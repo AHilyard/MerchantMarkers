@@ -1,0 +1,41 @@
+modLoader="javafml"
+loaderVersion="[37,)"
+license="CC BY-NC-ND 4.0"
+
+[[mods]]
+modId="merchantmarkers"
+version="${file.jarVersion}"
+displayName="Merchant Markers"
+displayURL="https://anthonyhilyard.com/"
+updateJSONURL="https://mc-curse-update-checker.herokuapp.com/549275"
+logoFile="icon.png"
+authors="Grend"
+description='''Adds floating markers above villagers to indicate their professions.'''
+
+[[dependencies.merchantmarkers]]
+	modId="forge"
+	mandatory=true
+	versionRange="[37,)"
+	ordering="NONE"
+	side="BOTH"
+
+[[dependencies.merchantmarkers]]
+	modId="minecraft"
+	mandatory=true
+	versionRange="[1.17.1]"
+	ordering="NONE"
+	side="BOTH"
+
+[[dependencies.merchantmarkers]]
+	modId="iceberg"
+	mandatory=true
+	versionRange="[1.0.25,)"
+	ordering="NONE"
+	side="BOTH"
+
+[[dependencies.merchantmarkers]]
+	modId="xaerominimap"
+	mandatory=false
+	versionRange="[21.21.0,)"
+	ordering="BEFORE"
+	side="BOTH"
