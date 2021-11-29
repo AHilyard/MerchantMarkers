@@ -253,8 +253,8 @@ public class Markers
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
 		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
 		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-		bufferbuilder.vertex(matrix, (float)x,			(float)(y + h),	0).uv(u0, v1).endVertex();
-		bufferbuilder.vertex(matrix, (float)(x + w),	(float)(y + h),	0).uv(u1, v1).endVertex();
+		bufferbuilder.vertex(matrix, (float)x,			(float)(y + h),		0).uv(u0, v1).endVertex();
+		bufferbuilder.vertex(matrix, (float)(x + w),	(float)(y + h),		0).uv(u1, v1).endVertex();
 		bufferbuilder.vertex(matrix, (float)(x + w),	(float)y,			0).uv(u1, v0).endVertex();
 		bufferbuilder.vertex(matrix, (float)x,			(float)y,			0).uv(u0, v0).endVertex();
 		bufferbuilder.end();

@@ -23,13 +23,15 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.server.packs.resources.SimpleReloadableResourceManager;
 
 import xaero.common.minimap.render.radar.EntityIconDefinitions;
 import xaero.minimap.XaeroMinimap;
 
-public class XaeroHandler
+public class XaeroHandler implements ResourceManagerReloadListener
 {
+	private static XaeroHandler INSTANCE = new XaeroHandler();
 	private static Map<MarkerResource, byte[]> iconCache = new HashMap<>();
 	private static BufferedImage overlayImage = null;
 	private static DynamicResourcePack dynamicPack = new DynamicResourcePack("dynamicicons");
@@ -148,6 +150,11 @@ public class XaeroHandler
 			SimpleReloadableResourceManager reloadableManager = (SimpleReloadableResourceManager)manager;
 			Supplier<Collection<ResourceLocation>> delayedResources = () -> reloadableManager.listResources("textures/entity/villager/markers", s -> s.endsWith(".png"));
 
+			if (!reloadableManager.listeners.contains(INSTANCE))
+			{
+				reloadableManager.listeners.add(0, INSTANCE);
+			}
+
 			// If we're showing icons on the minimap, setup proxies for the villager icon definitions and icons themselves.
 			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get())
 			{
@@ -225,6 +232,16 @@ public class XaeroHandler
 			{
 				reloadableManager.add(dynamicPack);
 			}
+		}
+	}
+
+	@Override
+	public void onResourceManagerReload(ResourceManager resourceManager)
+	{
+		if (resourceManager instanceof SimpleReloadableResourceManager)
+		{
+			Markers.clearResourceCache();
+			clearIconCache();
 		}
 	}
 }
