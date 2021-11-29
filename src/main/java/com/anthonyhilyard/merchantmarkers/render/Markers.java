@@ -54,7 +54,8 @@ public class Markers
 		String iconName = "default";
 		if (entity instanceof Villager)
 		{
-			iconName = ((Villager)entity).getVillagerData().getProfession().getName();
+			// If the profession name contains and colons, replace them with underscores.
+			iconName = ((Villager)entity).getVillagerData().getProfession().toString().replace(":","_");
 		}
 		else if (entity instanceof WanderingTrader)
 		{
