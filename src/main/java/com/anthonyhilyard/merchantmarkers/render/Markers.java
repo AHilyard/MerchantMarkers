@@ -84,7 +84,8 @@ public class Markers
 		String iconName = "default";
 		if (entity instanceof VillagerEntity)
 		{
-			iconName = ((VillagerEntity)entity).getVillagerData().getProfession().toString();
+			// If the profession name contains and colons, replace them with underscores.
+			iconName = ((VillagerEntity)entity).getVillagerData().getProfession().toString().replace(":","_");
 		}
 		else if (entity instanceof WanderingTraderEntity)
 		{
@@ -176,7 +177,7 @@ public class Markers
 	}
 
 	@SuppressWarnings("deprecation")
-	public static MarkerResource getMarkerResource(Minecraft mc, String iconName) //, Entity entity)
+	public static MarkerResource getMarkerResource(Minecraft mc, String iconName)
 	{
 		// Returned the cached value, if there is one.
 		if (resourceCache.containsKey(iconName))
