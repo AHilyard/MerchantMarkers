@@ -3,10 +3,9 @@ package com.anthonyhilyard.merchantmarkers;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import static java.util.Map.entry;
+import java.util.stream.Collectors;
 
 import com.anthonyhilyard.merchantmarkers.render.Markers;
 import com.electronwill.nightconfig.core.CommentedConfig;
@@ -24,7 +23,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.config.ModConfig;
 
 @EventBusSubscriber(modid = Loader.MODID, bus = Bus.MOD)
 public class MerchantMarkersConfig
@@ -62,22 +61,22 @@ public class MerchantMarkersConfig
 
 	static
 	{
-		defaultAssociatedItems = () -> TomlFormat.newConfig(() -> new LinkedHashMap<String, Object>(Map.ofEntries(
-			entry("armorer",			"minecraft:iron_chestplate"),
-			entry("butcher",			"minecraft:beef"),
-			entry("cartographer",		"minecraft:compass"),
-			entry("cleric",				"minecraft:rotten_flesh"),
-			entry("farmer",				"minecraft:wheat"),
-			entry("fisherman",			"minecraft:cod"),
-			entry("fletcher",			"minecraft:bow"),
-			entry("leatherworker",		"minecraft:leather"),
-			entry("librarian",			"minecraft:bookshelf"),
-			entry("mason",				"minecraft:brick"),
-			entry("shepherd",			"minecraft:shears"),
-			entry("toolsmith",			"minecraft:iron_pickaxe"),
-			entry("weaponsmith",		"minecraft:iron_sword"),
-			entry("wandering_trader",	"minecraft:emerald")
-		)));
+		defaultAssociatedItems = () -> TomlFormat.newConfig(() -> new LinkedHashMap<String, Object>() {{
+			put("armorer",			"minecraft:iron_chestplate");
+			put("butcher",			"minecraft:beef");
+			put("cartographer",		"minecraft:compass");
+			put("cleric",				"minecraft:rotten_flesh");
+			put("farmer",				"minecraft:wheat");
+			put("fisherman",			"minecraft:cod");
+			put("fletcher",			"minecraft:bow");
+			put("leatherworker",		"minecraft:leather");
+			put("librarian",			"minecraft:bookshelf");
+			put("mason",				"minecraft:brick");
+			put("shepherd",			"minecraft:shears");
+			put("toolsmith",			"minecraft:iron_pickaxe");
+			put("weaponsmith",		"minecraft:iron_sword");
+			put("wandering_trader",	"minecraft:emerald");
+		}});
 
 		Config.setInsertionOrderPreserved(true);
 		Pair<MerchantMarkersConfig, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(MerchantMarkersConfig::new);
@@ -100,16 +99,16 @@ public class MerchantMarkersConfig
 								   "    \"jobs\" - Shows the texture from the villager's job site block (like the brewing stand for clerics, and so on).\n" +
 								   "    \"generic\" - Shows a generic icon that is the same for all villagers.\n" +
 								   "    \"custom\" - Shows custom icons for each villager profession (these can be replaced with a resource pack).")
-								   .defineInList("marker_type", "custom", Arrays.stream(MarkerType.values()).map(v -> v.name().toLowerCase()).toList());
+								   .defineInList("marker_type", "custom", Arrays.stream(MarkerType.values()).map(v -> v.name().toLowerCase()).collect(Collectors.toList()));
 
-		professionBlacklist = build.comment(" A list of professions to ignore when displaying markers. Use \"none\" for villagers with no profession.").define("profession_blacklist", List.of("none", "nitwit"));
-		associatedItems = build.comment(" The items associated with each villager profession.  Only used when marker type is set to \"items\".").define(List.of("associated_items"), defaultAssociatedItems, (v) -> true, CommentedConfig.class);
+		professionBlacklist = build.comment(" A list of professions to ignore when displaying markers. Use \"none\" for villagers with no profession.").define("profession_blacklist", Arrays.asList("none", "nitwit"));
+		associatedItems = build.comment(" The items associated with each villager profession.  Only used when marker type is set to \"items\".").define(Arrays.asList("associated_items"), defaultAssociatedItems, (v) -> true, CommentedConfig.class);
 
 		build.pop().pop();
 	}
 
 	@SubscribeEvent
-	public static void onLoad(ModConfigEvent.Reloading event)
+	public static void onLoad(ModConfig.Reloading event)
 	{
 		if (event.getConfig().getModId().equals(Loader.MODID))
 		{

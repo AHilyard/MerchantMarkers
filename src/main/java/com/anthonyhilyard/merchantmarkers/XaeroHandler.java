@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import javax.imageio.ImageIO;
@@ -15,21 +16,25 @@ import javax.imageio.ImageIO;
 import com.anthonyhilyard.iceberg.util.DynamicResourcePack;
 import com.anthonyhilyard.merchantmarkers.render.Markers;
 import com.anthonyhilyard.merchantmarkers.render.Markers.MarkerResource;
+import com.anthonyhilyard.merchantmarkers.util.NullInputStream;
 import com.google.gson.JsonObject;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.SimpleReloadableResourceManager;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.resource.IResourceType;
+import net.minecraftforge.resource.ISelectiveResourceReloadListener;
+import net.minecraft.entity.Entity;
+import net.minecraft.resources.ResourcePackType;
+import net.minecraft.resources.IResourceManager;
+import net.minecraft.resources.SimpleReloadableResourceManager;
 
 import xaero.common.minimap.render.radar.EntityIconDefinitions;
 import xaero.minimap.XaeroMinimap;
 
-public class XaeroHandler
+public class XaeroHandler implements ISelectiveResourceReloadListener
 {
+	private static XaeroHandler INSTANCE = new XaeroHandler();
 	private static Map<MarkerResource, byte[]> iconCache = new HashMap<>();
 	private static BufferedImage overlayImage = null;
 	private static DynamicResourcePack dynamicPack = new DynamicResourcePack("dynamicicons");
@@ -70,7 +75,7 @@ public class XaeroHandler
 		MarkerResource resource = resourceSupplier.get();
 		if (resource == null)
 		{
-			return InputStream.nullInputStream();
+			return NullInputStream.stream();
 		}
 
 		if (iconCache.containsKey(resource))
@@ -78,16 +83,16 @@ public class XaeroHandler
 			return new ByteArrayInputStream(iconCache.get(resource));
 		}
 
-		ResourceManager manager = Minecraft.getInstance().getResourceManager();
+		IResourceManager manager = Minecraft.getInstance().getResourceManager();
 
 		BufferedImage newImage = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D graphics = newImage.createGraphics();
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 
 		// Maybe it's just not loaded yet?  Bail for now.
-		if (!manager.hasResource(resource.texture()) && Minecraft.getInstance().getTextureManager().getTexture(resource.texture(), null) == null)
+		if (!manager.hasResource(resource.texture) && Minecraft.getInstance().getTextureManager().getTexture(resource.texture) == null)
 		{
-			return InputStream.nullInputStream();
+			return NullInputStream.stream();
 		}
 
 		try
@@ -98,7 +103,7 @@ public class XaeroHandler
 				overlayImage = ImageIO.read(manager.getResource(Markers.ICON_OVERLAY).getInputStream());
 			}
 
-			BufferedImage originalImage = ImageIO.read(manager.getResource(resource.texture()).getInputStream());
+			BufferedImage originalImage = ImageIO.read(manager.getResource(resource.texture).getInputStream());
 
 			// TODO: Configuration option for this?
 			final int size = 32;
@@ -109,7 +114,7 @@ public class XaeroHandler
 
 			// Also draw the overlay graphic.
 			int overlayIndex = MerchantMarkersConfig.INSTANCE.overlayIndex.get();
-			if (overlayIndex != -1 && resource.overlay())
+			if (overlayIndex != -1 && resource.overlay)
 			{
 				graphics.drawImage(overlayImage, 32, 32, (64 + size) / 2, (64 - size) / 2,
 				(overlayIndex % 2) * (int)(overlayImage.getWidth() / 2),
@@ -121,11 +126,15 @@ public class XaeroHandler
 			graphics.dispose();
 
 			// Convert the image to an input stream and return it.
-			try (os)
+			try
 			{
 				ImageIO.write(newImage, "png", os);
 				iconCache.put(resource, os.toByteArray());
 				return new ByteArrayInputStream(iconCache.get(resource));
+			}
+			finally
+			{
+				os.close();
 			}
 		}
 		catch (Exception e)
@@ -134,24 +143,28 @@ public class XaeroHandler
 		}
 
 		iconCache.put(resource, new byte[0]);
-		return InputStream.nullInputStream();
+		return NullInputStream.stream();
 	}
+
+
 
 	@SuppressWarnings("resource")
 	public static void setupDynamicIcons()
 	{
 		Minecraft mc = Minecraft.getInstance();
-		ResourceManager manager = mc.getResourceManager();
+		IResourceManager manager = mc.getResourceManager();
 
 		if (manager instanceof SimpleReloadableResourceManager)
 		{
 			SimpleReloadableResourceManager reloadableManager = (SimpleReloadableResourceManager)manager;
 			Supplier<Collection<ResourceLocation>> delayedResources = () -> reloadableManager.listResources("textures/entity/villager/markers", s -> s.endsWith(".png"));
 
+			reloadableManager.registerReloadListener(INSTANCE);
+
 			// If we're showing icons on the minimap, setup proxies for the villager icon definitions and icons themselves.
 			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get())
 			{
-				dynamicPack.registerResource(PackType.CLIENT_RESOURCES, new ResourceLocation("xaerominimap", "entity/icon/definition/minecraft/villager.json"), () -> {
+				dynamicPack.registerResource(ResourcePackType.CLIENT_RESOURCES, new ResourceLocation("xaerominimap", "entity/icon/definition/minecraft/villager.json"), () -> {
 
 					// Dynamically build the .json file to include all current villager markers available, with dynamic proxies for each.
 					JsonObject variants = new JsonObject();
@@ -177,19 +190,19 @@ public class XaeroHandler
 					ResourceLocation markerLocation = new ResourceLocation("xaerominimap", "entity/icon/sprite/" + marker.getPath());
 
 					// If this location is already registered in Minecraft's texture manager, release it first.
-					if (mc.getTextureManager().getTexture(markerLocation, null) != null)
+					if (mc.getTextureManager().getTexture(markerLocation) != null)
 					{
 						mc.execute(() -> mc.getTextureManager().release(markerLocation));
 					}
 
 					// Register a proxy resource to display our chosen icon.
-					dynamicPack.registerResource(PackType.CLIENT_RESOURCES, markerLocation, () -> {
+					dynamicPack.registerResource(ResourcePackType.CLIENT_RESOURCES, markerLocation, () -> {
 						try
 						{
 							InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(mc, iconName));
 							if (proxyStream.available() == 0)
 							{
-								return reloadableManager.getResource(Markers.getMarkerResource(mc, iconName).texture()).getInputStream();
+								return reloadableManager.getResource(Markers.getMarkerResource(mc, iconName).texture).getInputStream();
 							}
 							else
 							{
@@ -198,7 +211,7 @@ public class XaeroHandler
 						}
 						catch (Exception e)
 						{
-							return InputStream.nullInputStream();
+							return NullInputStream.stream();
 						}
 					});
 				}
@@ -206,7 +219,7 @@ public class XaeroHandler
 			// If we're not showing icons on the minimap, just setup a default icons definition file.
 			else
 			{
-				dynamicPack.registerResource(PackType.CLIENT_RESOURCES, new ResourceLocation("xaerominimap", "entity/icon/definition/minecraft/villager.json"), () -> {
+				dynamicPack.registerResource(ResourcePackType.CLIENT_RESOURCES, new ResourceLocation("xaerominimap", "entity/icon/definition/minecraft/villager.json"), () -> {
 
 					// Dynamically build the .json file to include all current villager markers available, with dynamic proxies for each.
 					JsonObject variants = new JsonObject();
@@ -224,6 +237,20 @@ public class XaeroHandler
 			if (!reloadableManager.listPacks().anyMatch(pack -> pack.equals(dynamicPack)))
 			{
 				reloadableManager.add(dynamicPack);
+			}
+		}
+	}
+
+	@Override
+	public void onResourceManagerReload(IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate)
+	{
+		if (resourceManager instanceof SimpleReloadableResourceManager)
+		{
+			SimpleReloadableResourceManager reloadableManager = (SimpleReloadableResourceManager) resourceManager;
+			if (!reloadableManager.listPacks().anyMatch(pack -> pack.equals(dynamicPack)))
+			{
+				reloadableManager.add(dynamicPack);
+				clearIconCache();
 			}
 		}
 	}
