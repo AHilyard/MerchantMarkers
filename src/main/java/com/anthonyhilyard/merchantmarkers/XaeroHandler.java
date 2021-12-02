@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 import javax.imageio.ImageIO;
 
 import com.anthonyhilyard.iceberg.util.DynamicResourcePack;
+import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig.OverlayType;
 import com.anthonyhilyard.merchantmarkers.render.Markers;
 import com.anthonyhilyard.merchantmarkers.render.Markers.MarkerResource;
 import com.google.gson.JsonObject;
@@ -21,6 +22,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
@@ -33,21 +35,23 @@ public class XaeroHandler implements ResourceManagerReloadListener
 {
 	private static XaeroHandler INSTANCE = new XaeroHandler();
 	private static Map<MarkerResource, byte[]> iconCache = new HashMap<>();
-	private static BufferedImage overlayImage = null;
+	private static BufferedImage iconOverlayImage = null;
+	private static BufferedImage numberOverlayImage = null;
 	private static DynamicResourcePack dynamicPack = new DynamicResourcePack("dynamicicons");
 
 	public static void buildVariantIdString(final StringBuilder stringBuilder, final EntityRenderer<?> entityRenderer, final Entity entity)
 	{
 		// If the profession blacklist contains this profession, run the default functionality.
-		String iconName = Markers.getIconName(entity);
-		if (MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(iconName))
+		String profession = Markers.getProfessionName(entity);
+		int professionLevel = Markers.getProfessionLevel(entity);
+		if (MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(profession))
 		{
 			EntityIconDefinitions.buildVariantIdString(stringBuilder, entityRenderer, entity);
 		}
 		// Otherwise, we'll fill in a standin identifier for a dynamically-populated icon (see below).
 		else
 		{
-			stringBuilder.append(iconName);
+			stringBuilder.append(profession).append("-").append(professionLevel);
 		}
 	}
 
@@ -80,9 +84,12 @@ public class XaeroHandler implements ResourceManagerReloadListener
 			return new ByteArrayInputStream(iconCache.get(resource));
 		}
 
+		final int innerSize = (int)(32 * MerchantMarkersConfig.INSTANCE.minimapIconScale.get());
+		final int outerSize = 64;
+
 		ResourceManager manager = Minecraft.getInstance().getResourceManager();
 
-		BufferedImage newImage = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage newImage = new BufferedImage(outerSize, outerSize, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D graphics = newImage.createGraphics();
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 
@@ -94,32 +101,35 @@ public class XaeroHandler implements ResourceManagerReloadListener
 
 		try
 		{
-			// Lazy-load the overlay image now if needed.
-			if (overlayImage == null)
+			// Lazy-load the overlay images now if needed.
+			if (iconOverlayImage == null)
 			{
-				overlayImage = ImageIO.read(manager.getResource(Markers.ICON_OVERLAY).getInputStream());
+				iconOverlayImage = ImageIO.read(manager.getResource(Markers.ICON_OVERLAY).getInputStream());
+			}
+			if (numberOverlayImage == null)
+			{
+				numberOverlayImage = ImageIO.read(manager.getResource(Markers.NUMBER_OVERLAY).getInputStream());
 			}
 
 			BufferedImage originalImage = ImageIO.read(manager.getResource(resource.texture()).getInputStream());
-
-			// TODO: Configuration option for this?
-			final int size = 32;
+			final int left = (outerSize - innerSize) / 2;
+			final int right = (outerSize + innerSize) / 2;
+			final int top = (outerSize + innerSize) / 2;
+			final int bottom = (outerSize - innerSize) / 2;
 
 			// Draw the icon centered in the new image.
-			graphics.drawImage(originalImage, (64 - size) / 2, (64 + size) / 2, (64 + size) / 2, (64 - size) / 2,
-							   0, 0, (int)(originalImage.getWidth()), (int)(originalImage.getHeight()), null);
+			graphics.drawImage(originalImage, left, top, right, bottom,
+							   0, 0, originalImage.getWidth(), originalImage.getHeight(), null);
 
 			// Also draw the overlay graphic.
-			int overlayIndex = MerchantMarkersConfig.INSTANCE.overlayIndex.get();
-			if (overlayIndex != -1 && resource.overlay())
-			{
-				graphics.drawImage(overlayImage, 32, 32, (64 + size) / 2, (64 - size) / 2,
-				(overlayIndex % 2) * (int)(overlayImage.getWidth() / 2),
-				(overlayIndex / 2) * (int)(overlayImage.getHeight() / 2),
-				(overlayIndex % 2) * (int)(overlayImage.getWidth() / 2) + (int)(overlayImage.getWidth() / 2),
-				(overlayIndex / 2) * (int)(overlayImage.getHeight() / 2) + (int)(overlayImage.getHeight() / 2), null);
-			}
-
+			Markers.renderOverlay(resource, (dx, dy, width, height, sx, sy) -> {
+				BufferedImage overlayImage = resource.overlay() == OverlayType.LEVEL ? numberOverlayImage : iconOverlayImage;
+				final float scale = (innerSize / (float)originalImage.getWidth());
+				graphics.drawImage(overlayImage,
+								  (int)(left + dx * scale), (int)(top - dy * scale),
+								  (int)(left + (dx + width) * scale), (int)(top - (dy + height) * scale),
+								  sx, sy, sx + width, sy + height, null);
+			});
 			graphics.dispose();
 
 			// Convert the image to an input stream and return it.
@@ -158,15 +168,32 @@ public class XaeroHandler implements ResourceManagerReloadListener
 			// If we're showing icons on the minimap, setup proxies for the villager icon definitions and icons themselves.
 			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get())
 			{
+				final int minLevel;
+				final int maxLevel;
+
+				// If level display is turned off, we only care about level 0, which means "don't show level".
+				if (!MerchantMarkersConfig.INSTANCE.showLevels())
+				{
+					minLevel = maxLevel = 0;
+				}
+				else
+				{
+					minLevel = 0;
+					maxLevel = VillagerData.MAX_VILLAGER_LEVEL + 10;
+				}
+				
 				dynamicPack.registerResource(PackType.CLIENT_RESOURCES, new ResourceLocation("xaerominimap", "entity/icon/definition/minecraft/villager.json"), () -> {
 
 					// Dynamically build the .json file to include all current villager markers available, with dynamic proxies for each.
 					JsonObject variants = new JsonObject();
 					for (ResourceLocation marker : delayedResources.get())
 					{
-						String[] components = marker.getPath().split("/");
-						String iconName = components[components.length - 1].replace(".png", "");
-						variants.addProperty(iconName, "sprite:" + marker.getPath());
+						for (int i = minLevel; i <= maxLevel; i++)
+						{
+							String[] components = marker.getPath().split("/");
+							String iconName = components[components.length - 1].replace(".png", "");
+							variants.addProperty(iconName + "-" + String.valueOf(i), "sprite:" + marker.getPath().replace(".png",  "-" + String.valueOf(i) + ".png"));
+						}
 					}
 
 					JsonObject result = new JsonObject();
@@ -181,33 +208,38 @@ public class XaeroHandler implements ResourceManagerReloadListener
 					String[] components = marker.getPath().split("/");
 					String iconName = components[components.length - 1].replace(".png", "");
 
-					ResourceLocation markerLocation = new ResourceLocation("xaerominimap", "entity/icon/sprite/" + marker.getPath());
-
-					// If this location is already registered in Minecraft's texture manager, release it first.
-					if (mc.getTextureManager().getTexture(markerLocation, null) != null)
+					for (int i = minLevel; i <= maxLevel; i++)
 					{
-						mc.execute(() -> mc.getTextureManager().release(markerLocation));
-					}
+						final int level = i;
+						ResourceLocation markerLocation = new ResourceLocation("xaerominimap", "entity/icon/sprite/" + marker.getPath().replace(".png", "-" + String.valueOf(i) + ".png"));
 
-					// Register a proxy resource to display our chosen icon.
-					dynamicPack.registerResource(PackType.CLIENT_RESOURCES, markerLocation, () -> {
-						try
+						// If this location is already registered in Minecraft's texture manager, release it first.
+						if (mc.getTextureManager().getTexture(markerLocation, null) != null)
 						{
-							InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(mc, iconName));
-							if (proxyStream.available() == 0)
-							{
-								return reloadableManager.getResource(Markers.getMarkerResource(mc, iconName).texture()).getInputStream();
-							}
-							else
-							{
-								return proxyStream;
-							}
+							mc.execute(() -> mc.getTextureManager().release(markerLocation));
 						}
-						catch (Exception e)
-						{
-							return InputStream.nullInputStream();
-						}
-					});
+
+						// Register a proxy resource to display our chosen icon.
+						dynamicPack.registerResource(PackType.CLIENT_RESOURCES, markerLocation, () -> {
+							try
+							{
+								
+								InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(mc, iconName, level));
+								if (proxyStream.available() == 0)
+								{
+									return reloadableManager.getResource(Markers.getMarkerResource(mc, iconName, level).texture()).getInputStream();
+								}
+								else
+								{
+									return proxyStream;
+								}
+							}
+							catch (Exception e)
+							{
+								return InputStream.nullInputStream();
+							}
+						});
+					}
 				}
 			}
 			// If we're not showing icons on the minimap, just setup a default icons definition file.
