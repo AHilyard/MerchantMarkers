@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.anthonyhilyard.merchantmarkers.Loader;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
+import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig.OverlayType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
@@ -43,15 +44,17 @@ public class Markers
 	public static class MarkerResource
 	{
 		public final ResourceLocation texture;
-		public final boolean overlay;
-		public MarkerResource(ResourceLocation texture, boolean overlay)
+		public final OverlayType overlay;
+		public final int level;
+		public MarkerResource(ResourceLocation texture, OverlayType overlay, int level)
 		{
 			this.texture = texture;
 			this.overlay = overlay;
+			this.level = level;
 		}
 
 		@Override
-		public int hashCode() { return Objects.hash(texture, overlay); }
+		public int hashCode() { return Objects.hash(texture, overlay, level); }
 
 		@Override
 		public boolean equals(Object obj)
@@ -68,24 +71,26 @@ public class Markers
 			{
 				MarkerResource other = (MarkerResource) obj;
 				return Objects.equals(texture, other.texture) &&
-					   Objects.equals(overlay, other.overlay);
+					   Objects.equals(overlay, other.overlay) &&
+					   Objects.equals(level, other.level);
 			}
 		}
 	}
 
 	public static final ResourceLocation MARKER_ARROW = new ResourceLocation(Loader.MODID, "textures/entity/villager/arrow.png");
 	public static final ResourceLocation ICON_OVERLAY = new ResourceLocation(Loader.MODID, "textures/entity/villager/overlay.png");
+	public static final ResourceLocation NUMBER_OVERLAY = new ResourceLocation(Loader.MODID, "textures/entity/villager/numbers.png");
 	public static final ResourceLocation DEFAULT_ICON = new ResourceLocation(Loader.MODID, "textures/entity/villager/default.png");
 
 	private static Map<String, MarkerResource> resourceCache = new HashMap<>();
 
-	public static String getIconName(Entity entity)
+	public static String getProfessionName(Entity entity)
 	{
 		String iconName = "default";
 		if (entity instanceof VillagerEntity)
 		{
-			// If the profession name contains and colons, replace them with underscores.
-			iconName = ((VillagerEntity)entity).getVillagerData().getProfession().toString().replace(":","_");
+			// If the profession name contains any colons, replace them with double underscores.
+			iconName = ((VillagerEntity)entity).getVillagerData().getProfession().toString().replace(":","__");
 		}
 		else if (entity instanceof WanderingTraderEntity)
 		{
@@ -98,16 +103,27 @@ public class Markers
 		return iconName;
 	}
 
+	public static int getProfessionLevel(Entity entity)
+	{
+		int level = 0;
+		if (MerchantMarkersConfig.INSTANCE.showLevels() && entity instanceof VillagerEntity)
+		{
+			level = ((VillagerEntity)entity).getVillagerData().getLevel();
+		}
+		return level;
+	}
+
 	@SuppressWarnings("deprecation")
 	public static void renderMarker(EntityRenderer<?> renderer, Entity entity, ITextComponent component, MatrixStack matrixStack, IRenderTypeBuffer buffer, int packedLight)
 	{
 		if (entity instanceof AbstractVillagerEntity)
 		{
 			Minecraft mc = Minecraft.getInstance();
-			String iconName = getIconName(entity);
+			String profession = getProfessionName(entity);
+			int level = getProfessionLevel(entity);
 			
 			// Skip professions in the blacklist.
-			if (MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(iconName))
+			if (MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(profession))
 			{
 				return;
 			}
@@ -134,10 +150,12 @@ public class Markers
 				currentAlpha = MathHelper.clamp(1.0 - ((Math.sqrt(squareDistance) - startFade) / (maxDistance - startFade)), 0.0, 1.0);
 			}
 
-			float f = entity.getBbHeight() + 0.5F;
-			int i = "deadmau5".equals(component.getString()) ? -28 : -18;
+			float entityHeight = entity.getBbHeight() + 0.5F;
+			int y = "deadmau5".equals(component.getString()) ? -28 : -18;
+			y -= MerchantMarkersConfig.INSTANCE.verticalOffset.get();
+
 			matrixStack.pushPose();
-			matrixStack.translate(0.0D, (double)f, 0.0D);
+			matrixStack.translate(0.0D, (double)entityHeight, 0.0D);
 			matrixStack.mulPose(renderer.entityRenderDispatcher.cameraOrientation());
 			matrixStack.scale(-0.025F, -0.025F, 0.025F);
 
@@ -150,21 +168,19 @@ public class Markers
 
 			if (showArrow)
 			{
-				mc.getTextureManager().bind(MARKER_ARROW);
-				AbstractGui.blit(matrixStack, -8, i + 8, 0, 0, 16, 8, 16, 8);
+				renderArrow(matrixStack, 0, y);
 			}
 
-			renderMarker(getMarkerResource(mc, iconName), matrixStack, -8, showArrow ? i - 9 : i);
+			renderMarker(getMarkerResource(mc, profession, level), matrixStack, -8, showArrow ? y - 9 : y);
 
 			RenderSystem.enableDepthTest();
 			RenderSystem.color4f(1.0f, 1.0f, 1.0f, (float)currentAlpha);
 
-			renderMarker(getMarkerResource(mc, iconName), matrixStack, -8, showArrow ? i - 9 : i);
+			renderMarker(getMarkerResource(mc, profession, level), matrixStack, -8, showArrow ? y - 9 : y);
 
 			if (showArrow)
 			{
-				mc.getTextureManager().bind(MARKER_ARROW);
-				AbstractGui.blit(matrixStack, -8, i + 8, 0, 0, 16, 8, 16, 8);
+				renderArrow(matrixStack, 0, y);
 			}
 
 			matrixStack.popPose();
@@ -177,38 +193,41 @@ public class Markers
 	}
 
 	@SuppressWarnings("deprecation")
-	public static MarkerResource getMarkerResource(Minecraft mc, String iconName)
+	public static MarkerResource getMarkerResource(Minecraft mc, String professionName, int level)
 	{
+		String resourceKey = String.format("%s-%d", professionName, level);
+
 		// Returned the cached value, if there is one.
-		if (resourceCache.containsKey(iconName))
+		if (resourceCache.containsKey(resourceKey))
 		{
-			return resourceCache.get(iconName);
+			return resourceCache.get(resourceKey);
 		}
 
 		MarkerResource result = null;
+		OverlayType overlayType = OverlayType.fromValue(MerchantMarkersConfig.INSTANCE.overlayIndex.get()).orElse(OverlayType.NONE);
 
 		switch (MerchantMarkersConfig.MarkerType.fromText(MerchantMarkersConfig.INSTANCE.markerType.get()).get())
 		{
 			case ITEMS:
 			{
-				String associatedItemKey = MerchantMarkersConfig.INSTANCE.associatedItems.get().get(iconName);
+				ResourceLocation associatedItemKey = MerchantMarkersConfig.INSTANCE.getAssociatedItem(professionName);
 				if (associatedItemKey != null)
 				{
-					Item associatedItem = ForgeRegistries.ITEMS.getValue(new ResourceLocation(associatedItemKey));
+					Item associatedItem = ForgeRegistries.ITEMS.getValue(associatedItemKey);
 
 					ItemRenderer itemRenderer = mc.getItemRenderer();
 					IBakedModel bakedModel = itemRenderer.getModel(new ItemStack(associatedItem), (World)null, mc.player);
 
 					TextureAtlasSprite sprite = bakedModel.getParticleIcon();
 					ResourceLocation spriteLocation = new ResourceLocation(sprite.getName().getNamespace(), String.format("textures/%s%s", sprite.getName().getPath(), ".png"));
-					result = new MarkerResource(spriteLocation, true);
+					result = new MarkerResource(spriteLocation, overlayType, level);
 				}
 				break;
 			}
 			case JOBS:
 			{
 				// If the entity is a villager, find the (first) job block for their profession.
-				VillagerProfession profession = Registry.VILLAGER_PROFESSION.get(new ResourceLocation(iconName));
+				VillagerProfession profession = Registry.VILLAGER_PROFESSION.get(new ResourceLocation(professionName.replace("__", ":")));
 				if (profession != VillagerProfession.NONE)
 				{
 					Set<BlockState> jobBlockStates = profession.getJobPoiType().getBlockStates();
@@ -220,7 +239,7 @@ public class Markers
 
 						TextureAtlasSprite sprite = bakedModel.getParticleIcon();
 						ResourceLocation spriteLocation = new ResourceLocation(sprite.getName().getNamespace(), String.format("textures/%s%s", sprite.getName().getPath(), ".png"));
-						result = new MarkerResource(spriteLocation, true);
+						result = new MarkerResource(spriteLocation, overlayType, level);
 					}
 				}
 				break;
@@ -229,10 +248,10 @@ public class Markers
 			default:
 			{
 				// Check if the given resource exists, otherwise use the default icon.
-				ResourceLocation iconResource = new ResourceLocation(Loader.MODID, String.format("textures/entity/villager/markers/%s.png", iconName));
+				ResourceLocation iconResource = new ResourceLocation(Loader.MODID, String.format("textures/entity/villager/markers/%s.png", professionName));
 				if (mc.getResourceManager().hasResource(iconResource))
 				{
-					result = new MarkerResource(iconResource, true);
+					result = new MarkerResource(iconResource, overlayType, level);
 				}
 				break;
 			}
@@ -244,30 +263,73 @@ public class Markers
 		if (result == null)
 		{
 			// If we got this far, we were missing something so just render the default icon.
-			result = new MarkerResource(DEFAULT_ICON, false);
+			result = new MarkerResource(DEFAULT_ICON, overlayType, level);
 		}
 
 		// Cache the result.
-		resourceCache.put(iconName, result);
+		resourceCache.put(resourceKey, result);
 		return result;
 	}
 
 	private static void renderMarker(MarkerResource resource, MatrixStack matrixStack, int x, int y)
 	{
+		float scale = (float)(double)MerchantMarkersConfig.INSTANCE.iconScale.get();
+		matrixStack.pushPose();
+		matrixStack.scale(scale, scale, 1.0f);
 		renderIcon(resource.texture, matrixStack, x, y);
-		if (resource.overlay)
-		{
-			int overlayIndex = MerchantMarkersConfig.INSTANCE.overlayIndex.get();
-			if (overlayIndex == -1)
-			{
-				return;
-			}
-
-			matrixStack.pushPose();
+		renderOverlay(resource, (dx, dy, width, height, sx, sy) -> {
 			matrixStack.translate(0, 0, -1);
-			renderIcon(ICON_OVERLAY, matrixStack, x + 8, y + 8, 8, 8, (overlayIndex % 2) * 0.5f, (overlayIndex % 2) * 0.5f + 0.5f, (overlayIndex / 2) * 0.5f, (overlayIndex / 2) * 0.5f + 0.5f);
-			matrixStack.popPose();
+			float imageSize = resource.overlay == OverlayType.LEVEL ? 32.0f : 16.0f;
+			renderIcon(resource.overlay == OverlayType.LEVEL ? NUMBER_OVERLAY : ICON_OVERLAY, matrixStack, x + dx, y + dy, width, height, sx / imageSize, (sx + width) / imageSize, sy / imageSize, (sy + height) / imageSize);
+		});
+		matrixStack.popPose();
+	}
+
+	private static void renderArrow(MatrixStack matrixStack, int x, int y)
+	{
+		Minecraft mc = Minecraft.getInstance();
+		float scale = (float)(double)MerchantMarkersConfig.INSTANCE.iconScale.get();
+		matrixStack.pushPose();
+		matrixStack.scale(scale, scale, 1.0f);
+		mc.getTextureManager().bind(MARKER_ARROW);
+		AbstractGui.blit(matrixStack, x - 8, y + 8, 0, 0, 16, 8, 16, 8);
+		matrixStack.popPose();
+	}
+
+	@FunctionalInterface
+	public interface OverlayRendererMethod { void accept(int dx, int dy, int width, int height, int sx, int sy); }
+
+	public static void renderOverlay(MarkerResource resource, OverlayRendererMethod method)
+	{
+		if (resource.overlay == OverlayType.LEVEL)
+		{
+			renderOverlayLevel(resource, method);
 		}
+		else if (resource.overlay != OverlayType.NONE)
+		{
+			renderOverlayIcon(resource, method);
+		}
+	}
+
+	private static void renderOverlayLevel(MarkerResource resource, OverlayRendererMethod method)
+	{
+		int processedDigits = resource.level;
+		int xOffset = 8;
+
+		// If the overlay is set to "profession level" and this marker has a level to show, add every digit needed.
+		// Even though vanilla only supports a max level of 5, this should support any profession level.
+		while (processedDigits > 0)
+		{
+			int currentDigit = processedDigits % 10;
+			method.accept(xOffset, 8, 8, 8, (currentDigit % 4) * 8, (currentDigit / 4) * 8);
+			processedDigits /= 10;
+			xOffset -= 5;
+		}
+	}
+
+	private static void renderOverlayIcon(MarkerResource resource, OverlayRendererMethod method)
+	{
+		method.accept(8, 8, 8, 8, (resource.overlay.value() % 2) * 8, (resource.overlay.value() / 2) * 8);
 	}
 
 	private static void renderIcon(ResourceLocation icon, MatrixStack matrixStack, int x, int y)
@@ -286,8 +348,8 @@ public class Markers
 		bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
 		bufferbuilder.vertex(matrix, (float)x,			(float)(y + h),	0).uv(u0, v1).endVertex();
 		bufferbuilder.vertex(matrix, (float)(x + w),	(float)(y + h),	0).uv(u1, v1).endVertex();
-		bufferbuilder.vertex(matrix, (float)(x + w),	(float)y,			0).uv(u1, v0).endVertex();
-		bufferbuilder.vertex(matrix, (float)x,			(float)y,			0).uv(u0, v0).endVertex();
+		bufferbuilder.vertex(matrix, (float)(x + w),	(float)y,		0).uv(u1, v0).endVertex();
+		bufferbuilder.vertex(matrix, (float)x,			(float)y,		0).uv(u0, v0).endVertex();
 		bufferbuilder.end();
 		WorldVertexBufferUploader.end(bufferbuilder);
 	}
