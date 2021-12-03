@@ -110,7 +110,7 @@ public class MerchantMarkersConfig
 
 		showThroughWalls = build.comment(" If markers should be visible through walls and other obstructions.").define("show_through_walls", true);
 		showArrow = build.comment(" If markers should include an arrow under the profession-specific icon.").define("show_arrow", true);
-		showOnMiniMap = build.comment(" If icons should show on minimaps. (Currently supports Xaero's Minimap).").define("show_on_minimap", true);
+		showOnMiniMap = build.comment(" If icons should show on minimaps. (Currently supports Xaero's Minimap and FTB Chunks).").define("show_on_minimap", true);
 		overlayIndex = build.comment(" Which overlay graphic to use (0 = backpack, 1 = emerald, 2 = coin stack, 3 = bag, 4 = profession level, -1 = none).").defineInRange("overlay_icon", 3, -1, 4);
 		maxDistance = build.comment(" The maximum distance, in blocks, at which markers are visible.").defineInRange("max_distance", 64.0, 16.0, 256.0);
 		fadePercent = build.comment(" The percent of the maximum distance at which markers will begin to fade out.").defineInRange("fade_percent", 25.0, 0.0, 100.0);
@@ -184,16 +184,20 @@ public class MerchantMarkersConfig
 		{
 			Loader.LOGGER.info("Merchant Markers config reloaded.");
 			Markers.clearResourceCache();
-			if (ModList.get().isLoaded("xaerominimap"))
+			try
 			{
-				try
+				if (ModList.get().isLoaded("xaerominimap"))
 				{
 					Class.forName("com.anthonyhilyard.merchantmarkers.XaeroHandler").getMethod("clearIconCache").invoke(null);
 				}
-				catch (Exception e)
+				if (ModList.get().isLoaded("ftbchunks"))
 				{
-					Loader.LOGGER.error(e.toString());
+					Class.forName("com.anthonyhilyard.merchantmarkers.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
 				}
+			}
+			catch (Exception e)
+			{
+				Loader.LOGGER.error(e.toString());
 			}
 		}
 	}

@@ -39,3 +39,10 @@ description='''Adds floating markers above villagers to indicate their professio
 	versionRange="[21.21.0,)"
 	ordering="BEFORE"
 	side="BOTH"
+
+[[dependencies.merchantmarkers]]
+	modId="ftbchunks"
+	mandatory=false
+	versionRange="[1605.3.2,)"
+	ordering="BEFORE"
+	side="BOTH"

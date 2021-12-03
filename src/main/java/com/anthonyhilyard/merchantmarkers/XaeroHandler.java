@@ -156,7 +156,6 @@ public class XaeroHandler implements ISelectiveResourceReloadListener
 	}
 
 
-
 	@SuppressWarnings("resource")
 	public static void setupDynamicIcons()
 	{
