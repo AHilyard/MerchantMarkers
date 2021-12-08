@@ -11,7 +11,7 @@ apply plugin: 'eclipse'
 
 archivesBaseName = project.name + '-' + project.mcVersion
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 minecraft {
 	mappings channel: 'official', version: project.mcVersion
@@ -49,8 +49,8 @@ sourceSets {
 dependencies {
 	minecraft "net.minecraftforge:forge:${project.mcVersion}-${project.forgeVersion}"
 
-	implementation fg.deobf('curse.maven:iceberg-520110:3534150')
-	compileOnly 'curse.maven:xaerominimap-263420:3511447'
+	implementation fg.deobf('curse.maven:iceberg-520110:3553159')
+	compileOnly 'curse.maven:xaerominimap-263420:3551765'
 }
 
 jar {

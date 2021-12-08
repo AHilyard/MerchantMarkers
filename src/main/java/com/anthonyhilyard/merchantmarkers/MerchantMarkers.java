@@ -28,6 +28,6 @@ public class MerchantMarkers
 	@SubscribeEvent
 	public static void onRenderNameplate(RenderNameplateEvent event)
 	{
-		Markers.renderMarker(event.getEntityRenderer(), event.getEntity(), event.getContent(), event.getMatrixStack(), event.getRenderTypeBuffer(), event.getPackedLight());
+		Markers.renderMarker(event.getEntityRenderer(), event.getEntity(), event.getContent(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight());
 	}
 }
