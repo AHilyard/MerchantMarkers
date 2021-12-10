@@ -1,33 +1,34 @@
 package com.anthonyhilyard.merchantmarkers;
 
-import com.anthonyhilyard.merchantmarkers.render.Markers;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import net.minecraftforge.client.event.RenderNameplateEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraftforge.api.ModLoadingContext;
+import net.minecraftforge.fml.config.ModConfig;
 
-public class MerchantMarkers
+public class MerchantMarkers implements ClientModInitializer
 {
-	public void onClientSetup(FMLClientSetupEvent event)
+	@Override
+	public void onInitializeClient()
 	{
-		// If Xaero's minimap is loaded, add a resource manager listener for dynamically-sized map icons.
-		if (ModList.get().isLoaded("xaerominimap"))
-		{
-			try
-			{
-				Class.forName("com.anthonyhilyard.merchantmarkers.XaeroHandler").getMethod("setupDynamicIcons").invoke(null);
-			}
-			catch (Exception e)
-			{
-				Loader.LOGGER.error(e.toString());
-			}
-		}
-	}
+		ModLoadingContext.registerConfig(Loader.MODID, ModConfig.Type.COMMON, MerchantMarkersConfig.SPEC);
 
-	@SubscribeEvent
-	public static void onRenderNameplate(RenderNameplateEvent event)
-	{
-		Markers.renderMarker(event.getEntityRenderer(), event.getEntity(), event.getContent(), event.getMatrixStack(), event.getRenderTypeBuffer(), event.getPackedLight());
+		ClientLifecycleEvents.CLIENT_STARTED.register((client) -> {
+			// If Xaero's minimap is loaded, add a resource manager listener for dynamically-sized map icons.
+			if (FabricLoader.getInstance().isModLoaded("xaerominimap"))
+			{
+				try
+				{
+					Class.forName("com.anthonyhilyard.merchantmarkers.XaeroHandler").getMethod("setupDynamicIcons").invoke(null);
+				}
+				catch (Exception e)
+				{
+					Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
+				}
+			}
+		});
+		
 	}
 }

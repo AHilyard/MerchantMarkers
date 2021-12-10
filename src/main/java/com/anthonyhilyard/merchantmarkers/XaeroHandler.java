@@ -181,7 +181,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 					minLevel = 0;
 					maxLevel = VillagerData.MAX_VILLAGER_LEVEL + 10;
 				}
-				
+
 				dynamicPack.registerResource(PackType.CLIENT_RESOURCES, new ResourceLocation("xaerominimap", "entity/icon/definition/minecraft/villager.json"), () -> {
 
 					// Dynamically build the .json file to include all current villager markers available, with dynamic proxies for each.
@@ -223,7 +223,6 @@ public class XaeroHandler implements ResourceManagerReloadListener
 						dynamicPack.registerResource(PackType.CLIENT_RESOURCES, markerLocation, () -> {
 							try
 							{
-								
 								InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(mc, iconName, level));
 								if (proxyStream.available() == 0)
 								{

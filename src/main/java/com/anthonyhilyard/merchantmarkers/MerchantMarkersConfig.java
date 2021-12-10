@@ -12,21 +12,19 @@ import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.Lists;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.BooleanValue;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.common.ForgeConfigSpec.DoubleValue;
 import net.minecraftforge.common.ForgeConfigSpec.IntValue;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.api.fml.event.config.ModConfigEvent;
 
-@EventBusSubscriber(modid = Loader.MODID, bus = Bus.MOD)
 public class MerchantMarkersConfig
 {
 	public static final ForgeConfigSpec SPEC;
@@ -128,6 +126,8 @@ public class MerchantMarkersConfig
 		associatedItems = build.comment(" The items associated with each villager profession.  Only used when marker type is set to \"items\".\n If not specified here, vanilla professions will have a default item and modded professions will have a generic icon.").define("associated_items", Config.of(TomlFormat.instance()), (v) -> validateAssociatedItems((Config)v));
 
 		build.pop().pop();
+
+		ModConfigEvent.RELOADING.register(MerchantMarkersConfig::onLoad);
 	}
 
 	/**
@@ -178,14 +178,13 @@ public class MerchantMarkersConfig
 		return true;
 	}
 
-	@SubscribeEvent
-	public static void onLoad(ModConfigEvent.Reloading event)
+	public static void onLoad(ModConfig config)
 	{
-		if (event.getConfig().getModId().equals(Loader.MODID))
+		if (config.getModId().equals(Loader.MODID))
 		{
 			Loader.LOGGER.info("Merchant Markers config reloaded.");
 			Markers.clearResourceCache();
-			if (ModList.get().isLoaded("xaerominimap"))
+			if (FabricLoader.getInstance().isModLoaded("xaerominimap"))
 			{
 				try
 				{
@@ -193,7 +192,7 @@ public class MerchantMarkersConfig
 				}
 				catch (Exception e)
 				{
-					Loader.LOGGER.error(e.toString());
+					Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
 			}
 		}

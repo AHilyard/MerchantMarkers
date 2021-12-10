@@ -1,0 +1,4 @@
+accessWidener v1 named
+accessible	field	net/minecraft/client/renderer/entity/EntityRenderer	entityRenderDispatcher	Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;
+accessible	field	net/minecraft/server/packs/resources/SimpleReloadableResourceManager	listeners	Ljava/util/List;
+accessible	field	net/minecraft/world/entity/ai/village/poi/PoiType	matchingStates	Ljava/util/Set;

@@ -38,7 +38,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.registries.ForgeRegistries;
+//import net.minecraftforge.registries.ForgeRegistries;
 
 public class Markers
 {
@@ -158,7 +158,6 @@ public class Markers
 		resourceCache.clear();
 	}
 
-	@SuppressWarnings("deprecation")
 	public static MarkerResource getMarkerResource(Minecraft mc, String professionName, int level)
 	{
 		String resourceKey = String.format("%s-%d", professionName, level);
@@ -177,9 +176,9 @@ public class Markers
 			case ITEMS:
 			{
 				ResourceLocation associatedItemKey = MerchantMarkersConfig.INSTANCE.getAssociatedItem(professionName);
-				if (associatedItemKey != null)
+				if (associatedItemKey != null && Registry.ITEM.containsKey(associatedItemKey))
 				{
-					Item associatedItem = ForgeRegistries.ITEMS.getValue(associatedItemKey);
+					Item associatedItem = Registry.ITEM.getOptional(associatedItemKey).get();
 
 					ItemRenderer itemRenderer = mc.getItemRenderer();
 					BakedModel bakedModel = itemRenderer.getModel(new ItemStack(associatedItem), (Level)null, mc.player, 0);
@@ -196,7 +195,7 @@ public class Markers
 				VillagerProfession profession = Registry.VILLAGER_PROFESSION.get(new ResourceLocation(professionName.replace("__", ":")));
 				if (profession != VillagerProfession.NONE)
 				{
-					Set<BlockState> jobBlockStates = profession.getJobPoiType().getBlockStates();
+					Set<BlockState> jobBlockStates = profession.getJobPoiType().matchingStates;
 
 					if (!jobBlockStates.isEmpty())
 					{

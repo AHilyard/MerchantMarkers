@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "com.anthonyhilyard.merchantmarkers.mixin",
+	"compatibilityLevel": "JAVA_16",
+	"mixins": [
+		"EntityRendererMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"minVersion": "0.8.2",
+	"target": "@env(DEFAULT)"
+}
