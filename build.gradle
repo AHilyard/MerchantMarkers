@@ -49,7 +49,7 @@ sourceSets {
 dependencies {
 	minecraft "net.minecraftforge:forge:${project.mcVersion}-${project.forgeVersion}"
 
-	implementation fg.deobf('curse.maven:iceberg-520110:3553159')
+	implementation fg.deobf('curse.maven:iceberg-520110:3561115')
 	compileOnly 'curse.maven:xaerominimap-263420:3551765'
 }
 
