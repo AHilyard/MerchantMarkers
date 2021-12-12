@@ -1,17 +1,24 @@
 buildscript {
 	repositories {
 		maven { url = 'https://files.minecraftforge.net/maven' }
+		maven { url = "https://repo.spongepowered.org/maven" }
 	}
 	dependencies {
 		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+		classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
 	}
 }
 apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'eclipse'
 
 archivesBaseName = project.name + '-' + project.mcVersion
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+
+mixin {
+	add sourceSets.main, "${project.name.toLowerCase()}.refmap.json"
+}
 
 minecraft {
 	mappings channel: 'official', version: project.mcVersion
@@ -48,9 +55,11 @@ sourceSets {
 
 dependencies {
 	minecraft "net.minecraftforge:forge:${project.mcVersion}-${project.forgeVersion}"
+	annotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
 
 	implementation fg.deobf('curse.maven:iceberg-520110:3534150')
 	compileOnly 'curse.maven:xaerominimap-263420:3511447'
+	compileOnly 'curse.maven:journeymap-32274:3556456'
 }
 
 jar {
@@ -61,6 +70,7 @@ jar {
 					"Implementation-Title": project.name,
 					"Implementation-Version": project.version,
 					"Implementation-Vendor" : project.author,
-					"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")],)
+					"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+					"MixinConfigs": "${project.name.toLowerCase()}.mixins.json"],)
 	}
 }

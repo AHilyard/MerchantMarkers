@@ -1,0 +1,16 @@
+{
+	"required": true,
+	"package": "com.anthonyhilyard.merchantmarkers.mixin",
+	"compatibilityLevel": "JAVA_16",
+	"refmap": "merchantmarkers.refmap.json",
+	"plugin": "com.anthonyhilyard.merchantmarkers.mixin.JourneyMapMixinConfig",
+	"mixins": [
+		"JourneyMapDrawEntityStepMixin",
+		"JourneyMapEntityHelperMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"minVersion": "0.8.4",
+	"target": "@env(DEFAULT)"
+}
