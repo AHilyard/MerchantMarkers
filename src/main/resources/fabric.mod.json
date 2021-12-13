@@ -30,12 +30,12 @@
 	],
 
 	"depends": {
-		"fabricloader": ">=0.11.6",
+		"fabricloader": ">=0.12.8",
 		"fabric": "*",
-		"minecraft": "1.17.x",
-		"java": ">=16",
-		"forgeconfigapiport": ">=2.0.1",
-		"iceberg": ">=1.0.21"
+		"minecraft": "1.18.x",
+		"java": ">=17",
+		"forgeconfigapiport": ">=3.1.0",
+		"iceberg": ">=1.0.27"
 	},
 	"suggests": {
 		"xaerominimap": ">=21.22.3"
