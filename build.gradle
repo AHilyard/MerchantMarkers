@@ -63,6 +63,7 @@ dependencies {
 	compileOnly 'curse.maven:xaerominimap-263420:3551765'
 	compileOnly 'curse.maven:ftblibrary-404465:3598890'
 	compileOnly 'curse.maven:ftbchunks-314906:3601595'
+	compileOnly 'curse.maven:journeymap-32274:3621130'
 }
 
 jar {

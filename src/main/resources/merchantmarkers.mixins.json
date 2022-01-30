@@ -3,9 +3,11 @@
 	"package": "com.anthonyhilyard.merchantmarkers.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"refmap": "merchantmarkers.refmap.json",
-	"plugin": "com.anthonyhilyard.merchantmarkers.mixin.FTBChunksMixinConfig",
+	"plugin": "com.anthonyhilyard.merchantmarkers.mixin.MixinConfig",
 	"mixins": [
-		"FTBChunksClientMixin"
+		"FTBChunksClientMixin",
+		"JourneyMapDrawEntityStepMixin",
+		"JourneyMapEntityHelperMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

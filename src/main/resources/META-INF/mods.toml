@@ -46,3 +46,10 @@ description='''Adds floating markers above villagers to indicate their professio
 	versionRange="[1801.3.3,)"
 	ordering="BEFORE"
 	side="BOTH"
+
+[[dependencies.merchantmarkers]]
+	modId="journeymap"
+	mandatory=false
+	versionRange="[5.8.0beta11,)"
+	ordering="BEFORE"
+	side="BOTH"
