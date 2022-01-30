@@ -11,17 +11,22 @@ public class MerchantMarkers
 {
 	public void onClientSetup(FMLClientSetupEvent event)
 	{
-		// If Xaero's minimap is loaded, add a resource manager listener for dynamically-sized map icons.
-		if (ModList.get().isLoaded("xaerominimap"))
+		try
 		{
-			try
+			// If Xaero's minimap is loaded, add a resource manager listener for dynamically-sized map icons.
+			if (ModList.get().isLoaded("xaerominimap"))
 			{
 				Class.forName("com.anthonyhilyard.merchantmarkers.XaeroHandler").getMethod("setupDynamicIcons").invoke(null);
 			}
-			catch (Exception e)
+			// Same thing for FTB Chunks.
+			if (ModList.get().isLoaded("ftbchunks"))
 			{
-				Loader.LOGGER.error(e.toString());
+				Class.forName("com.anthonyhilyard.merchantmarkers.FTBChunksHandler").getMethod("setupDynamicIcons").invoke(null);
 			}
+		}
+		catch (Exception e)
+		{
+			Loader.LOGGER.error(e.toString());
 		}
 	}
 

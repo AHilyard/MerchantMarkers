@@ -29,7 +29,7 @@ description='''Adds floating markers above villagers to indicate their professio
 [[dependencies.merchantmarkers]]
 	modId="iceberg"
 	mandatory=true
-	versionRange="[1.0.30,)"
+	versionRange="[1.0.39,)"
 	ordering="NONE"
 	side="BOTH"
 
@@ -37,5 +37,12 @@ description='''Adds floating markers above villagers to indicate their professio
 	modId="xaerominimap"
 	mandatory=false
 	versionRange="[21.22.3,)"
+	ordering="BEFORE"
+	side="BOTH"
+
+[[dependencies.merchantmarkers]]
+	modId="ftbchunks"
+	mandatory=false
+	versionRange="[1801.3.3,)"
 	ordering="BEFORE"
 	side="BOTH"

@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "com.anthonyhilyard.merchantmarkers.mixin",
+	"compatibilityLevel": "JAVA_17",
+	"refmap": "merchantmarkers.refmap.json",
+	"plugin": "com.anthonyhilyard.merchantmarkers.mixin.FTBChunksMixinConfig",
+	"mixins": [
+		"FTBChunksClientMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"minVersion": "0.8.5",
+	"target": "@env(DEFAULT)"
+}
