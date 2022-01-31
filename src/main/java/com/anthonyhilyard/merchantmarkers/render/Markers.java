@@ -114,6 +114,9 @@ public class Markers
 
 				// Calculate the current alpha value for this marker.
 				currentAlpha = Mth.clamp(1.0 - ((Math.sqrt(squareDistance) - startFade) / (maxDistance - startFade)), 0.0, 1.0);
+
+				// Multiply in the configured opacity value.
+				currentAlpha *= MerchantMarkersConfig.INSTANCE.opacity.get();
 			}
 
 			float entityHeight = entity.getBbHeight() + 0.5F;
@@ -139,14 +142,17 @@ public class Markers
 
 			renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y);
 
-			RenderSystem.enableDepthTest();
-			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, (float)currentAlpha);
-
-			renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y);
-
-			if (showArrow)
+			if (MerchantMarkersConfig.INSTANCE.showThroughWalls.get())
 			{
-				renderArrow(poseStack, 0, y);
+				RenderSystem.enableDepthTest();
+				RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, (float)currentAlpha);
+
+				renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y);
+
+				if (showArrow)
+				{
+					renderArrow(poseStack, 0, y);
+				}
 			}
 
 			poseStack.popPose();
