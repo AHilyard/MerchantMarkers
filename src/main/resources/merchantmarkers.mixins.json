@@ -6,6 +6,7 @@
 	"plugin": "com.anthonyhilyard.merchantmarkers.mixin.MixinConfig",
 	"mixins": [
 		"FTBChunksClientMixin",
+		"FTBChunksMapIconWidgetMixin",
 		"JourneyMapDrawEntityStepMixin",
 		"JourneyMapEntityHelperMixin"
 	],
