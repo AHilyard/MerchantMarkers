@@ -1,3 +1,6 @@
+### 1.1.2
+- Added new marker opacity configuration option.
+
 ### 1.1.1
 - Added support for FTB Chunks minimap.
 - Added support for JourneyMap minimap.

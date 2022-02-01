@@ -129,29 +129,30 @@ public class Markers
 
 			RenderSystem.enableBlend();
 			RenderSystem.defaultBlendFunc();
-			RenderSystem.disableDepthTest();
-			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 0.3f * (float)currentAlpha);
 
 			boolean showArrow = MerchantMarkersConfig.INSTANCE.showArrow.get();
 
-			if (showArrow)
-			{
-				renderArrow(poseStack, 0, y);
-			}
-
-			renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y);
-
 			if (MerchantMarkersConfig.INSTANCE.showThroughWalls.get())
 			{
-				RenderSystem.enableDepthTest();
-				RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, (float)currentAlpha);
-
-				renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y);
+				RenderSystem.disableDepthTest();
+				RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 0.3f * (float)currentAlpha);
 
 				if (showArrow)
 				{
 					renderArrow(poseStack, 0, y);
 				}
+
+				renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y);
+			}
+
+			RenderSystem.enableDepthTest();
+			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, (float)currentAlpha);
+
+			renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y);
+
+			if (showArrow)
+			{
+				renderArrow(poseStack, 0, y);
 			}
 
 			poseStack.popPose();
