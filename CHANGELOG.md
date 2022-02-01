@@ -5,7 +5,7 @@
 
 ### 1.1.2
 - Added new marker opacity configuration option.
-- Fixed a bug that prevented the "show through walls" option from working when disabled.
+- Fixed a bug that prevented the "show through walls" option from disabling properly.
 
 ### 1.1.1
 - Added support for FTB Chunks minimap.

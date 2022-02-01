@@ -73,7 +73,7 @@ public class Markers
 	public static int getProfessionLevel(Entity entity)
 	{
 		int level = 0;
-		if (MerchantMarkersConfig.INSTANCE.showLevels() && entity instanceof Villager)
+		if (MerchantMarkersConfig.getInstance().showLevels() && entity instanceof Villager)
 		{
 			level = ((Villager)entity).getVillagerData().getLevel();
 		}
@@ -89,13 +89,13 @@ public class Markers
 			int level = getProfessionLevel(entity);
 			
 			// Skip professions in the blacklist.
-			if (MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(profession))
+			if (MerchantMarkersConfig.getInstance().professionBlacklist.get().contains(profession))
 			{
 				return;
 			}
 
 			double squareDistance = renderer.entityRenderDispatcher.distanceToSqr(entity);
-			double maxDistance = MerchantMarkersConfig.INSTANCE.maxDistance.get();
+			double maxDistance = MerchantMarkersConfig.getInstance().maxDistance.get();
 			
 			// If this entity is too far away, don't render the markers.
 			if (squareDistance > maxDistance * maxDistance)
@@ -103,7 +103,7 @@ public class Markers
 				return;
 			}
 
-			double fadePercent = MerchantMarkersConfig.INSTANCE.fadePercent.get();
+			double fadePercent = MerchantMarkersConfig.getInstance().fadePercent.get();
 			double currentAlpha = 1.0;
 			
 			// We won't do any calculations if fadePercent is 100, since that would make a division by zero.
@@ -116,12 +116,12 @@ public class Markers
 				currentAlpha = Mth.clamp(1.0 - ((Math.sqrt(squareDistance) - startFade) / (maxDistance - startFade)), 0.0, 1.0);
 
 				// Multiply in the configured opacity value.
-				currentAlpha *= MerchantMarkersConfig.INSTANCE.opacity.get();
+				currentAlpha *= MerchantMarkersConfig.getInstance().opacity.get();
 			}
 
 			float entityHeight = entity.getBbHeight() + 0.5F;
 			int y = "deadmau5".equals(component.getString()) ? -28 : -18;
-			y -= MerchantMarkersConfig.INSTANCE.verticalOffset.get();
+			y -= MerchantMarkersConfig.getInstance().verticalOffset.get();
 
 			poseStack.pushPose();
 			poseStack.translate(0.0D, (double)entityHeight, 0.0D);
@@ -133,7 +133,7 @@ public class Markers
 			RenderSystem.disableDepthTest();
 			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 0.3f * (float)currentAlpha);
 
-			boolean showArrow = MerchantMarkersConfig.INSTANCE.showArrow.get();
+			boolean showArrow = MerchantMarkersConfig.getInstance().showArrow.get();
 
 			if (showArrow)
 			{
@@ -142,7 +142,7 @@ public class Markers
 
 			renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y);
 
-			if (MerchantMarkersConfig.INSTANCE.showThroughWalls.get())
+			if (MerchantMarkersConfig.getInstance().showThroughWalls.get())
 			{
 				RenderSystem.enableDepthTest();
 				RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, (float)currentAlpha);
@@ -176,13 +176,13 @@ public class Markers
 		}
 
 		MarkerResource result = null;
-		OverlayType overlayType = OverlayType.fromValue(MerchantMarkersConfig.INSTANCE.overlayIndex.get()).orElse(OverlayType.NONE);
+		OverlayType overlayType = OverlayType.fromValue(MerchantMarkersConfig.getInstance().overlayIndex.get()).orElse(OverlayType.NONE);
 
-		switch (MerchantMarkersConfig.MarkerType.fromText(MerchantMarkersConfig.INSTANCE.markerType.get()).get())
+		switch (MerchantMarkersConfig.MarkerType.fromText(MerchantMarkersConfig.getInstance().markerType.get()).get())
 		{
 			case ITEMS:
 			{
-				ResourceLocation associatedItemKey = MerchantMarkersConfig.INSTANCE.getAssociatedItem(professionName);
+				ResourceLocation associatedItemKey = MerchantMarkersConfig.getInstance().getAssociatedItem(professionName);
 				if (associatedItemKey != null)
 				{
 					Item associatedItem = ForgeRegistries.ITEMS.getValue(associatedItemKey);
@@ -245,7 +245,7 @@ public class Markers
 
 	private static void renderMarker(MarkerResource resource, PoseStack poseStack, int x, int y)
 	{
-		float scale = (float)(double)MerchantMarkersConfig.INSTANCE.iconScale.get();
+		float scale = (float)(double)MerchantMarkersConfig.getInstance().iconScale.get();
 		poseStack.pushPose();
 		poseStack.scale(scale, scale, 1.0f);
 		renderIcon(resource.texture(), poseStack, x, y);
@@ -259,7 +259,7 @@ public class Markers
 
 	private static void renderArrow(PoseStack poseStack, int x, int y)
 	{
-		float scale = (float)(double)MerchantMarkersConfig.INSTANCE.iconScale.get();
+		float scale = (float)(double)MerchantMarkersConfig.getInstance().iconScale.get();
 		poseStack.pushPose();
 		poseStack.scale(scale, scale, 1.0f);
 		RenderSystem.setShaderTexture(0, MARKER_ARROW);

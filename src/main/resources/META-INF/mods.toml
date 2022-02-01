@@ -29,7 +29,7 @@ description='''Adds floating markers above villagers to indicate their professio
 [[dependencies.merchantmarkers]]
 	modId="iceberg"
 	mandatory=true
-	versionRange="[1.0.39,)"
+	versionRange="[1.0.40,)"
 	ordering="NONE"
 	side="BOTH"
 

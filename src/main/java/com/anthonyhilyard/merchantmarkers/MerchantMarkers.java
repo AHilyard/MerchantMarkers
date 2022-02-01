@@ -2,6 +2,8 @@ package com.anthonyhilyard.merchantmarkers;
 
 import com.anthonyhilyard.merchantmarkers.render.Markers;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import net.minecraftforge.client.event.RenderNameplateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -26,7 +28,7 @@ public class MerchantMarkers
 		}
 		catch (Exception e)
 		{
-			Loader.LOGGER.error(e.toString());
+			Loader.LOGGER.error(ExceptionUtils.getStackTrace(e.getCause()));
 		}
 	}
 

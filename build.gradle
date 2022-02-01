@@ -60,21 +60,21 @@ dependencies {
 	annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
 	implementation fg.deobf('curse.maven:iceberg-520110:3623826')
-	compileOnly 'curse.maven:xaerominimap-263420:3551765'
-	compileOnly 'curse.maven:ftblibrary-404465:3598890'
-	compileOnly 'curse.maven:ftbchunks-314906:3601595'
-	compileOnly 'curse.maven:journeymap-32274:3621130'
+	compileOnly fg.deobf('curse.maven:xaerominimap-263420:3551765')
+	compileOnly fg.deobf('curse.maven:ftblibrary-404465:3598890')
+	compileOnly fg.deobf('curse.maven:ftbchunks-314906:3601595')
+	compileOnly fg.deobf('curse.maven:journeymap-32274:3621130')
 }
 
 jar {
 	manifest {
-		attributes(["Specification-Title": project.name,
-					"Specification-Vendor": project.author,
-					"Specification-Version": project.version,
-					"Implementation-Title": project.name,
-					"Implementation-Version": project.version,
-					"Implementation-Vendor" : project.author,
-					"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-					"MixinConfigs": "${project.name.toLowerCase()}.mixins.json"],)
+		attributes(["Specification-Title":		project.name,
+					"Specification-Vendor":		project.author,
+					"Specification-Version":	project.version,
+					"Implementation-Title":		project.name,
+					"Implementation-Version":	project.version,
+					"Implementation-Vendor":	project.author,
+					"Implementation-Timestamp":	new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+					"MixinConfigs":				"${project.name.toLowerCase()}.mixins.json"],)
 	}
 }

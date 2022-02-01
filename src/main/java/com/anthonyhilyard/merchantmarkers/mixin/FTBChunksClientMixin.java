@@ -26,7 +26,7 @@ public class FTBChunksClientMixin
 	public Icon redirectGet(Entity entity)
 	{
 		// If this is a villager, return the dynamic texture instead of the default one.
-		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && entity.getType().getRegistryName().equals(new ResourceLocation("villager")))
+		if (MerchantMarkersConfig.getInstance().showOnMiniMap.get() && entity.getType().getRegistryName().equals(new ResourceLocation("villager")))
 		{
 			return Icon.getIcon(FTBChunksHandler.villagerTexture);
 		}
@@ -37,7 +37,7 @@ public class FTBChunksClientMixin
 	@Redirect(method = "mapIcons", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;getCategory()Lnet/minecraft/world/entity/MobCategory;"))
 	public MobCategory redirectGetCategory(EntityType<?> entityType)
 	{
-		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get())
+		if (MerchantMarkersConfig.getInstance().showOnMiniMap.get())
 		{
 			// Redirect the getCategory call to tell FTB Chunks that villagers aren't "Misc" category (so they aren't skipped).
 			if (entityType.getRegistryName().equals(new ResourceLocation("villager")))
@@ -57,7 +57,7 @@ public class FTBChunksClientMixin
 			Entity entity = entityIcon.entity;
 
 			// If this is a villager, return the dynamic texture instead of the default one.
-			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && entity.getType().getRegistryName().equals(new ResourceLocation("villager")))
+			if (MerchantMarkersConfig.getInstance().showOnMiniMap.get() && entity.getType().getRegistryName().equals(new ResourceLocation("villager")))
 			{
 				FTBChunksHandler.setCurrentEntity(entity);
 			}

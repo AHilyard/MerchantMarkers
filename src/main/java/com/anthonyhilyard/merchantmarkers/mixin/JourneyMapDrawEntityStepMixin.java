@@ -67,7 +67,7 @@ public class JourneyMapDrawEntityStepMixin
 
 	private BufferedImage getMarkerImage(MarkerResource resource)
 	{
-		final int innerSize = (int)(32 * MerchantMarkersConfig.INSTANCE.minimapIconScale.get());
+		final int innerSize = (int)(32 * MerchantMarkersConfig.getInstance().minimapIconScale.get());
 		final int outerSize = 64;
 
 		ResourceManager manager = Minecraft.getInstance().getResourceManager();

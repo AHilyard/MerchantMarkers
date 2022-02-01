@@ -1,18 +1,18 @@
 package com.anthonyhilyard.merchantmarkers;
 
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import static java.util.Map.entry;
 
+import com.anthonyhilyard.iceberg.config.IcebergConfig;
+import com.anthonyhilyard.iceberg.config.IcebergConfigSpec;
 import com.anthonyhilyard.merchantmarkers.render.Markers;
-import com.electronwill.nightconfig.core.Config;
-import com.electronwill.nightconfig.toml.TomlFormat;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.google.common.collect.Lists;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -20,17 +20,12 @@ import net.minecraftforge.common.ForgeConfigSpec.BooleanValue;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.common.ForgeConfigSpec.DoubleValue;
 import net.minecraftforge.common.ForgeConfigSpec.IntValue;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
 
-@EventBusSubscriber(modid = Loader.MODID, bus = Bus.MOD)
-public class MerchantMarkersConfig
+public class MerchantMarkersConfig extends IcebergConfig<MerchantMarkersConfig>
 {
-	public static final ForgeConfigSpec SPEC;
-	public static final MerchantMarkersConfig INSTANCE;
+	private static MerchantMarkersConfig INSTANCE;
+	public static MerchantMarkersConfig getInstance() { return INSTANCE; }
 
 	public final BooleanValue showThroughWalls;
 	public final BooleanValue showArrow;
@@ -44,7 +39,7 @@ public class MerchantMarkersConfig
 	public final IntValue verticalOffset;
 
 	public final ConfigValue<? extends String> markerType;
-	public final ConfigValue<Config> associatedItems;
+	public final ConfigValue<UnmodifiableConfig> associatedItems;
 	public final ConfigValue<List<? extends String>> professionBlacklist;
 
 	public enum MarkerType
@@ -80,32 +75,29 @@ public class MerchantMarkersConfig
 		}
 	}
 
-	private static Map<String, String> defaultAssociatedItems = new LinkedHashMap<String, String>(Map.ofEntries(
-		entry("armorer",			"minecraft:iron_chestplate"),
-		entry("butcher",			"minecraft:beef"),
-		entry("cartographer",		"minecraft:compass"),
-		entry("cleric",				"minecraft:rotten_flesh"),
-		entry("farmer",				"minecraft:wheat"),
-		entry("fisherman",			"minecraft:cod"),
-		entry("fletcher",			"minecraft:bow"),
-		entry("leatherworker",		"minecraft:leather"),
-		entry("librarian",			"minecraft:bookshelf"),
-		entry("mason",				"minecraft:brick"),
-		entry("shepherd",			"minecraft:shears"),
-		entry("toolsmith",			"minecraft:iron_pickaxe"),
-		entry("weaponsmith",		"minecraft:iron_sword"),
-		entry("wandering_trader",	"minecraft:emerald")
-	));
+	private static final UnmodifiableConfig defaultAssociatedItems;
 
 	static
 	{
-		Config.setInsertionOrderPreserved(true);
-		Pair<MerchantMarkersConfig, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(MerchantMarkersConfig::new);
-		SPEC = specPair.getRight();
-		INSTANCE = specPair.getLeft();
+		ForgeConfigSpec.Builder defaultAssociatedItemsBuilder = new ForgeConfigSpec.Builder();
+		defaultAssociatedItemsBuilder.define("armorer",				"minecraft:iron_chestplate");
+		defaultAssociatedItemsBuilder.define("butcher",				"minecraft:beef");
+		defaultAssociatedItemsBuilder.define("cartographer",		"minecraft:compass");
+		defaultAssociatedItemsBuilder.define("cleric",				"minecraft:rotten_flesh");
+		defaultAssociatedItemsBuilder.define("farmer",				"minecraft:wheat");
+		defaultAssociatedItemsBuilder.define("fisherman",			"minecraft:cod");
+		defaultAssociatedItemsBuilder.define("fletcher",			"minecraft:bow");
+		defaultAssociatedItemsBuilder.define("leatherworker",		"minecraft:leather");
+		defaultAssociatedItemsBuilder.define("librarian",			"minecraft:bookshelf");
+		defaultAssociatedItemsBuilder.define("mason",				"minecraft:brick");
+		defaultAssociatedItemsBuilder.define("shepherd",			"minecraft:shears");
+		defaultAssociatedItemsBuilder.define("toolsmith",			"minecraft:iron_pickaxe");
+		defaultAssociatedItemsBuilder.define("weaponsmith",			"minecraft:iron_sword");
+		defaultAssociatedItemsBuilder.define("wandering_trader",	"minecraft:emerald");
+		defaultAssociatedItems = defaultAssociatedItemsBuilder.build();
 	}
 
-	public MerchantMarkersConfig(ForgeConfigSpec.Builder build)
+	public MerchantMarkersConfig(IcebergConfigSpec.Builder build)
 	{
 		build.comment("Client Configuration").push("client").push("visual_options");
 
@@ -127,8 +119,8 @@ public class MerchantMarkersConfig
 								   .defineInList("marker_type", "custom", Arrays.stream(MarkerType.values()).map(v -> v.name().toLowerCase()).toList());
 
 		professionBlacklist = build.comment(" A list of professions to ignore when displaying markers. Use \"none\" for villagers with no profession.").define("profession_blacklist", Lists.newArrayList("none", "nitwit"));
-		associatedItems = build.comment(" The items associated with each villager profession.  Only used when marker type is set to \"items\".\n If not specified here, vanilla professions will have a default item and modded professions will have a generic icon.").define("associated_items", Config.of(TomlFormat.instance()), (v) -> validateAssociatedItems((Config)v));
-
+		associatedItems = build.comment(" The items associated with each villager profession.  Only used when marker type is set to \"items\".").defineSubconfig("associated_items", defaultAssociatedItems, k -> Objects.nonNull(k), v -> Objects.nonNull(v) && v instanceof String str && ResourceLocation.isValidResourceLocation(str));
+		
 		build.pop().pop();
 	}
 
@@ -150,7 +142,7 @@ public class MerchantMarkersConfig
 			return new ResourceLocation((String)configuredItems.get(profession));
 		}
 
-		if (defaultAssociatedItems.containsKey(profession))
+		if (defaultAssociatedItems.contains(profession))
 		{
 			return new ResourceLocation(defaultAssociatedItems.get(profession));
 		}
@@ -158,47 +150,31 @@ public class MerchantMarkersConfig
 		return null;
 	}
 
-	private static boolean validateAssociatedItems(Config v)
+	@Override
+	protected void onLoad()
 	{
-		if (v == null || v.valueMap() == null)
+		Markers.clearResourceCache();
+		try
 		{
-			return false;
-		}
-
-		// Note that if there is a non-null config value, this validation function always returns true because the entire collection is cleared otherwise, which sucks.
-		for (String key : v.valueMap().keySet())
-		{
-			Object value = v.valueMap().get(key);
-
-			// Value must be a string and a valid resource location.
-			if (!(value instanceof String) || !ResourceLocation.isValidResourceLocation((String)value))
-			{
-				Loader.LOGGER.warn("Invalid associated item found: \"{}\".  This value was ignored.", value);
-			}
-		}
-
-		return true;
-	}
-
-	@SubscribeEvent
-	public static void onLoad(ModConfigEvent.Reloading event)
-	{
-		if (event.getConfig().getModId().equals(Loader.MODID))
-		{
-			Loader.LOGGER.info("Merchant Markers config reloaded.");
-			Markers.clearResourceCache();
 			if (ModList.get().isLoaded("xaerominimap"))
 			{
-				try
-				{
-					Class.forName("com.anthonyhilyard.merchantmarkers.XaeroHandler").getMethod("clearIconCache").invoke(null);
-				}
-				catch (Exception e)
-				{
-					Loader.LOGGER.error(e.toString());
-				}
+				Class.forName("com.anthonyhilyard.merchantmarkers.XaeroHandler").getMethod("clearIconCache").invoke(null);
+			}
+			if (ModList.get().isLoaded("ftbchunks"))
+			{
+				Class.forName("com.anthonyhilyard.merchantmarkers.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
 			}
 		}
+		catch (Exception e)
+		{
+			Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
+		}
+	}
+
+	@Override
+	protected <I extends IcebergConfig<?>> void setInstance(I instance)
+	{
+		INSTANCE = (MerchantMarkersConfig) instance;
 	}
 
 }

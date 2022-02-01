@@ -18,6 +18,8 @@ import com.anthonyhilyard.merchantmarkers.render.Markers;
 import com.anthonyhilyard.merchantmarkers.render.Markers.MarkerResource;
 import com.google.gson.JsonObject;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -44,7 +46,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 		// If the profession blacklist contains this profession, run the default functionality.
 		String profession = Markers.getProfessionName(entity);
 		int professionLevel = Markers.getProfessionLevel(entity);
-		if (MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(profession))
+		if (MerchantMarkersConfig.getInstance().professionBlacklist.get().contains(profession))
 		{
 			EntityIconDefinitions.buildVariantIdString(stringBuilder, entityRenderer, entity);
 		}
@@ -84,7 +86,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 			return new ByteArrayInputStream(iconCache.get(resource));
 		}
 
-		final int innerSize = (int)(32 * MerchantMarkersConfig.INSTANCE.minimapIconScale.get());
+		final int innerSize = (int)(32 * MerchantMarkersConfig.getInstance().minimapIconScale.get());
 		final int outerSize = 64;
 
 		ResourceManager manager = Minecraft.getInstance().getResourceManager();
@@ -142,7 +144,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 		}
 		catch (Exception e)
 		{ 
-			Loader.LOGGER.error(e.toString());
+			Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
 
 		iconCache.put(resource, new byte[0]);
@@ -166,13 +168,13 @@ public class XaeroHandler implements ResourceManagerReloadListener
 			}
 
 			// If we're showing icons on the minimap, setup proxies for the villager icon definitions and icons themselves.
-			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get())
+			if (MerchantMarkersConfig.getInstance().showOnMiniMap.get())
 			{
 				final int minLevel;
 				final int maxLevel;
 
 				// If level display is turned off, we only care about level 0, which means "don't show level".
-				if (!MerchantMarkersConfig.INSTANCE.showLevels())
+				if (!MerchantMarkersConfig.getInstance().showLevels())
 				{
 					minLevel = maxLevel = 0;
 				}

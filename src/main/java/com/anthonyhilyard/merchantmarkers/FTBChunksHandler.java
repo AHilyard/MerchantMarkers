@@ -18,6 +18,7 @@ import com.anthonyhilyard.merchantmarkers.render.Markers;
 import com.anthonyhilyard.merchantmarkers.render.Markers.MarkerResource;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
@@ -78,7 +79,7 @@ public class FTBChunksHandler
 			return new ByteArrayInputStream(iconCache.get(resource));
 		}
 
-		final int innerSize = (int)(32 * MerchantMarkersConfig.INSTANCE.minimapIconScale.get());
+		final int innerSize = (int)(32 * MerchantMarkersConfig.getInstance().minimapIconScale.get());
 		final int outerSize = innerSize;
 
 		ResourceManager manager = Minecraft.getInstance().getResourceManager();
@@ -146,7 +147,7 @@ public class FTBChunksHandler
 		}
 		catch (Exception e)
 		{ 
-			Loader.LOGGER.error(e.toString());
+			Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
 
 		iconCache.put(resource, new byte[0]);
@@ -200,7 +201,7 @@ public class FTBChunksHandler
 					int level = Markers.getProfessionLevel(currentEntity);
 
 					// Return the default texture for blacklisted professions.
-					if (MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(profession))
+					if (MerchantMarkersConfig.getInstance().professionBlacklist.get().contains(profession))
 					{
 						return defaultVillagerResource == null ? InputStream.nullInputStream() : defaultVillagerResource.get();
 					}
