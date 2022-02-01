@@ -38,6 +38,8 @@ dependencies {
 
 	modImplementation 'curse.maven:iceberg-539382:3546762'
 	modApi 'curse.maven:xaerominimap-263420:3551764'
+	modApi 'curse.maven:ftblibrary-438495:3598889'
+	modApi 'curse.maven:ftbchunks-472657:3601594'
 }
 
 loom {
@@ -66,12 +68,12 @@ java {
 
 jar {
 	manifest {
-		attributes(["Specification-Title": project.name,
-					"Specification-Vendor": project.author,
-					"Specification-Version": "24.0",
-					"Implementation-Title": project.name,
-					"Implementation-Version": project.version,
-					"Implementation-Vendor" : project.author,
-					"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")],)
+		attributes(["Specification-Title":		project.name,
+					"Specification-Vendor":		project.author,
+					"Specification-Version":	project.version,
+					"Implementation-Title":		project.name,
+					"Implementation-Version":	project.version,
+					"Implementation-Vendor":	project.author,
+					"Implementation-Timestamp":	new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")],)
 	}
 }

@@ -65,7 +65,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 		setupDynamicIcons();
 
 		// Clear the minimap icon resources cache.
-		if (XaeroMinimap.instance.getInterfaces() != null)
+		if (XaeroMinimap.instance != null && XaeroMinimap.instance.getInterfaces() != null)
 		{
 			XaeroMinimap.instance.getInterfaces().getMinimapInterface().getMinimapFBORenderer().resetEntityIconsResources();
 		}
@@ -152,8 +152,8 @@ public class XaeroHandler implements ResourceManagerReloadListener
 	@SuppressWarnings("resource")
 	public static void setupDynamicIcons()
 	{
-		Minecraft mc = Minecraft.getInstance();
-		ResourceManager manager = mc.getResourceManager();
+		final Minecraft minecraft = Minecraft.getInstance();
+		ResourceManager manager = minecraft.getResourceManager();
 
 		if (manager instanceof SimpleReloadableResourceManager)
 		{
@@ -214,19 +214,19 @@ public class XaeroHandler implements ResourceManagerReloadListener
 						ResourceLocation markerLocation = new ResourceLocation("xaerominimap", "entity/icon/sprite/" + marker.getPath().replace(".png", "-" + String.valueOf(i) + ".png"));
 
 						// If this location is already registered in Minecraft's texture manager, release it first.
-						if (mc.getTextureManager().getTexture(markerLocation, null) != null)
+						if (minecraft.getTextureManager().getTexture(markerLocation, null) != null)
 						{
-							mc.execute(() -> mc.getTextureManager().release(markerLocation));
+							minecraft.execute(() -> minecraft.getTextureManager().release(markerLocation));
 						}
 
 						// Register a proxy resource to display our chosen icon.
 						dynamicPack.registerResource(PackType.CLIENT_RESOURCES, markerLocation, () -> {
 							try
 							{
-								InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(mc, iconName, level));
+								InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(minecraft, iconName, level));
 								if (proxyStream.available() == 0)
 								{
-									return reloadableManager.getResource(Markers.getMarkerResource(mc, iconName, level).texture()).getInputStream();
+									return reloadableManager.getResource(Markers.getMarkerResource(minecraft, iconName, level).texture()).getInputStream();
 								}
 								else
 								{

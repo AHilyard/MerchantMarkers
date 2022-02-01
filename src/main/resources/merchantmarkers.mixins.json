@@ -1,13 +1,16 @@
 {
 	"required": true,
 	"package": "com.anthonyhilyard.merchantmarkers.mixin",
-	"compatibilityLevel": "JAVA_16",
+	"compatibilityLevel": "JAVA_17",
+	"plugin": "com.anthonyhilyard.merchantmarkers.mixin.MixinConfig",
 	"mixins": [
-		"EntityRendererMixin"
+		"EntityRendererMixin",
+		"FTBChunksClientMixin",
+		"FTBChunksMapIconWidgetMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
 	},
-	"minVersion": "0.8.2",
+	"minVersion": "0.8.4",
 	"target": "@env(DEFAULT)"
 }

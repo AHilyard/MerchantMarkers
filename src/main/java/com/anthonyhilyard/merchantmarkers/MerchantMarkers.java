@@ -15,18 +15,24 @@ public class MerchantMarkers implements ClientModInitializer
 	{
 		ModLoadingContext.registerConfig(Loader.MODID, ModConfig.Type.COMMON, MerchantMarkersConfig.SPEC);
 
-		ClientLifecycleEvents.CLIENT_STARTED.register((client) -> {
-			// If Xaero's minimap is loaded, add a resource manager listener for dynamically-sized map icons.
-			if (FabricLoader.getInstance().isModLoaded("xaerominimap"))
+		ClientLifecycleEvents.CLIENT_STARTED.register((client) ->
+		{
+			try
 			{
-				try
+				// If Xaero's minimap is loaded, add a resource manager listener for dynamically-sized map icons.
+				if (FabricLoader.getInstance().isModLoaded("xaerominimap"))
 				{
 					Class.forName("com.anthonyhilyard.merchantmarkers.XaeroHandler").getMethod("setupDynamicIcons").invoke(null);
 				}
-				catch (Exception e)
+				// Same thing for FTB Chunks.
+				if (FabricLoader.getInstance().isModLoaded("ftbchunks"))
 				{
-					Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
+					Class.forName("com.anthonyhilyard.merchantmarkers.FTBChunksHandler").getMethod("setupDynamicIcons").invoke(null);
 				}
+			}
+			catch (Exception e)
+			{
+				Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
 			}
 		});
 		
