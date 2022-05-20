@@ -9,9 +9,8 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.LoadingModList;
-import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 
-public class FTBChunksMixinConfig implements IMixinConfigPlugin
+public class MixinConfig implements IMixinConfigPlugin
 {
 	private LoadingModList loadingModList = null;
 
@@ -24,25 +23,23 @@ public class FTBChunksMixinConfig implements IMixinConfigPlugin
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName)
 	{
+		if (loadingModList == null)
+		{
+			loadingModList = FMLLoader.getLoadingModList();
+		}
+
 		// Only apply mixins with "ftbchunks" in the name if the mod "ftbchunks" is present.
 		if (mixinClassName.toLowerCase().contains("ftbchunks"))
 		{
-			if (loadingModList == null)
-			{
-				loadingModList = FMLLoader.getLoadingModList();
-			}
-
-			// Check if FTB Chunks is available.  Not sure if there's a better way to do this at such an early stage...
-			for (ModInfo modInfo : loadingModList.getMods())
-			{
-				if (modInfo.getModId().equals("ftbchunks"))
-				{
-					return true;
-				}
-			}
-
-			return false;
+			return loadingModList.getMods().stream().anyMatch(modInfo -> modInfo.getModId().contentEquals("ftbchunks"));
 		}
+
+		// Same for "journeymap".
+		if (mixinClassName.toLowerCase().contains("journeymap"))
+		{
+			return loadingModList.getMods().stream().anyMatch(modInfo -> modInfo.getModId().contentEquals("journeymap"));
+		}
+
 		return true;
 	}
 

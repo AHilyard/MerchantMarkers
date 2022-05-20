@@ -135,7 +135,7 @@ public class MerchantMarkersConfig
 	 */
 	public boolean showLevels()
 	{
-		return OverlayType.LEVEL.equals(OverlayType.fromValue(INSTANCE.overlayIndex.get()).orElse(null));
+		return OverlayType.LEVEL.equals(OverlayType.fromValue(overlayIndex.get()).orElse(null));
 	}
 
 	public ResourceLocation getAssociatedItem(String profession)
@@ -188,11 +188,11 @@ public class MerchantMarkersConfig
 			{
 				if (ModList.get().isLoaded("xaerominimap"))
 				{
-					Class.forName("com.anthonyhilyard.merchantmarkers.XaeroHandler").getMethod("clearIconCache").invoke(null);
+					Class.forName("com.anthonyhilyard.merchantmarkers.compat.XaeroMinimapHandler").getMethod("clearIconCache").invoke(null);
 				}
 				if (ModList.get().isLoaded("ftbchunks"))
 				{
-					Class.forName("com.anthonyhilyard.merchantmarkers.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
+					Class.forName("com.anthonyhilyard.merchantmarkers.compat.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
 				}
 			}
 			catch (Exception e)

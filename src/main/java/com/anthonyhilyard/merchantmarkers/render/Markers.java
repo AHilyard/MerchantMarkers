@@ -1,23 +1,30 @@
 package com.anthonyhilyard.merchantmarkers.render;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import com.anthonyhilyard.merchantmarkers.Loader;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig.OverlayType;
+import com.anthonyhilyard.merchantmarkers.util.NullInputStream;
 import com.mojang.blaze3d.systems.RenderSystem;
+
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
+
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.math.vector.Matrix4f;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -35,6 +42,7 @@ import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.entity.merchant.villager.WanderingTraderEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.resources.IResourceManager;
 import net.minecraft.world.World;
 import net.minecraft.block.BlockState;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -81,8 +89,32 @@ public class Markers
 	public static final ResourceLocation ICON_OVERLAY = new ResourceLocation(Loader.MODID, "textures/entity/villager/overlay.png");
 	public static final ResourceLocation NUMBER_OVERLAY = new ResourceLocation(Loader.MODID, "textures/entity/villager/numbers.png");
 	public static final ResourceLocation DEFAULT_ICON = new ResourceLocation(Loader.MODID, "textures/entity/villager/default.png");
+	public static final ResourceLocation EMPTY_MARKER = new ResourceLocation(Loader.MODID, "textures/entity/villager/empty.png");
 
+	private static Supplier<InputStream> emptyMarkerResource = null;
+	
 	private static Map<String, MarkerResource> resourceCache = new HashMap<>();
+
+	public static InputStream getEmptyInputStream()
+	{
+		if (emptyMarkerResource == null)
+		{
+			emptyMarkerResource = () -> {
+				final Minecraft mc = Minecraft.getInstance();
+				final IResourceManager manager = mc.getResourceManager();
+				try
+				{
+					return manager.getResource(Markers.EMPTY_MARKER).getInputStream();
+				}
+				catch (Exception e)
+				{
+					// Don't do anything, maybe the resource pack just isn't ready yet.
+					return NullInputStream.stream();
+				}
+			};
+		}
+		return emptyMarkerResource.get();
+	}
 
 	public static String getProfessionName(Entity entity)
 	{
@@ -113,7 +145,6 @@ public class Markers
 		return level;
 	}
 
-	@SuppressWarnings("deprecation")
 	public static void renderMarker(EntityRenderer<?> renderer, Entity entity, ITextComponent component, MatrixStack matrixStack, IRenderTypeBuffer buffer, int packedLight)
 	{
 		if (entity instanceof AbstractVillagerEntity)
@@ -138,7 +169,7 @@ public class Markers
 			}
 
 			double fadePercent = MerchantMarkersConfig.INSTANCE.fadePercent.get();
-			double currentAlpha = 1.0;
+			float currentAlpha = 1.0f;
 			
 			// We won't do any calculations if fadePercent is 100, since that would make a division by zero.
 			if (fadePercent < 100.0)
@@ -147,7 +178,7 @@ public class Markers
 				double startFade = ((1.0 - (fadePercent / 100.0)) * maxDistance);
 
 				// Calculate the current alpha value for this marker.
-				currentAlpha = MathHelper.clamp(1.0 - ((Math.sqrt(squareDistance) - startFade) / (maxDistance - startFade)), 0.0, 1.0);
+				currentAlpha = (float)MathHelper.clamp(1.0 - ((Math.sqrt(squareDistance) - startFade) / (maxDistance - startFade)), 0.0, 1.0);
 			}
 
 			float entityHeight = entity.getBbHeight() + 0.5F;
@@ -159,29 +190,54 @@ public class Markers
 			matrixStack.mulPose(renderer.entityRenderDispatcher.cameraOrientation());
 			matrixStack.scale(-0.025F, -0.025F, 0.025F);
 
+			boolean depthTestEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+			boolean blendEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
+
 			RenderSystem.enableBlend();
 			RenderSystem.defaultBlendFunc();
-			RenderSystem.disableDepthTest();
-			RenderSystem.color4f(1.0f, 1.0f, 1.0f, 0.3f * (float)currentAlpha);
 
 			boolean showArrow = MerchantMarkersConfig.INSTANCE.showArrow.get();
 
-			if (showArrow)
+			if (MerchantMarkersConfig.INSTANCE.showThroughWalls.get())
 			{
-				renderArrow(matrixStack, 0, y);
-			}
+				RenderSystem.disableDepthTest();
 
-			renderMarker(getMarkerResource(mc, profession, level), matrixStack, -8, showArrow ? y - 9 : y);
+				renderMarker(getMarkerResource(mc, profession, level), matrixStack, -8, showArrow ? y - 9 : y, 0.3f * currentAlpha);
+
+				if (showArrow)
+				{
+					renderArrow(matrixStack, 0, y, 0.3f * currentAlpha);
+				}
+			}
 
 			RenderSystem.enableDepthTest();
-			RenderSystem.color4f(1.0f, 1.0f, 1.0f, (float)currentAlpha);
 
-			renderMarker(getMarkerResource(mc, profession, level), matrixStack, -8, showArrow ? y - 9 : y);
+			renderMarker(getMarkerResource(mc, profession, level), matrixStack, -8, showArrow ? y - 9 : y, currentAlpha);
 
 			if (showArrow)
 			{
-				renderArrow(matrixStack, 0, y);
+				renderArrow(matrixStack, 0, y, currentAlpha);
 			}
+
+			// Revert depth test to original state.
+			if (depthTestEnabled)
+			{
+				RenderSystem.enableDepthTest();
+			}
+			else
+			{
+				RenderSystem.disableDepthTest();
+			}
+
+			if (blendEnabled)
+			{
+				RenderSystem.enableBlend();
+			}
+			else
+			{
+				RenderSystem.disableBlend();
+			}
+
 
 			matrixStack.popPose();
 		}
@@ -271,28 +327,26 @@ public class Markers
 		return result;
 	}
 
-	private static void renderMarker(MarkerResource resource, MatrixStack matrixStack, int x, int y)
+	private static void renderMarker(MarkerResource resource, MatrixStack matrixStack, int x, int y, float alpha)
 	{
 		float scale = (float)(double)MerchantMarkersConfig.INSTANCE.iconScale.get();
 		matrixStack.pushPose();
 		matrixStack.scale(scale, scale, 1.0f);
-		renderIcon(resource.texture, matrixStack, x, y);
+		renderIcon(resource.texture, matrixStack, x, y, alpha);
 		renderOverlay(resource, (dx, dy, width, height, sx, sy) -> {
 			matrixStack.translate(0, 0, -1);
 			float imageSize = resource.overlay == OverlayType.LEVEL ? 32.0f : 16.0f;
-			renderIcon(resource.overlay == OverlayType.LEVEL ? NUMBER_OVERLAY : ICON_OVERLAY, matrixStack, x + dx, y + dy, width, height, sx / imageSize, (sx + width) / imageSize, sy / imageSize, (sy + height) / imageSize);
+			renderIcon(resource.overlay == OverlayType.LEVEL ? NUMBER_OVERLAY : ICON_OVERLAY, matrixStack, x + dx, y + dy, width, height, sx / imageSize, (sx + width) / imageSize, sy / imageSize, (sy + height) / imageSize, alpha);
 		});
 		matrixStack.popPose();
 	}
 
-	private static void renderArrow(MatrixStack matrixStack, int x, int y)
+	private static void renderArrow(MatrixStack matrixStack, int x, int y, float alpha)
 	{
-		Minecraft mc = Minecraft.getInstance();
 		float scale = (float)(double)MerchantMarkersConfig.INSTANCE.iconScale.get();
 		matrixStack.pushPose();
 		matrixStack.scale(scale, scale, 1.0f);
-		mc.getTextureManager().bind(MARKER_ARROW);
-		AbstractGui.blit(matrixStack, x - 8, y + 8, 0, 0, 16, 8, 16, 8);
+		renderIcon(MARKER_ARROW, matrixStack, x - 8, y + 8, 16, 8, 0, 1, 0, 1, alpha);
 		matrixStack.popPose();
 	}
 
@@ -332,12 +386,12 @@ public class Markers
 		method.accept(8, 8, 8, 8, (resource.overlay.value() % 2) * 8, (resource.overlay.value() / 2) * 8);
 	}
 
-	private static void renderIcon(ResourceLocation icon, MatrixStack matrixStack, int x, int y)
+	private static void renderIcon(ResourceLocation icon, MatrixStack matrixStack, int x, int y, float alpha)
 	{
-		renderIcon(icon, matrixStack, x, y, 16, 16, 0, 1, 0, 1);
+		renderIcon(icon, matrixStack, x, y, 16, 16, 0, 1, 0, 1, alpha);
 	}
 
-	private static void renderIcon(ResourceLocation icon, MatrixStack matrixStack, int x, int y, int w, int h, float u0, float u1, float v0, float v1)
+	private static void renderIcon(ResourceLocation icon, MatrixStack matrixStack, int x, int y, int w, int h, float u0, float u1, float v0, float v1, float alpha)
 	{
 		Minecraft mc = Minecraft.getInstance();
 		Matrix4f matrix = matrixStack.last().pose();
@@ -345,12 +399,13 @@ public class Markers
 		mc.getTextureManager().bind(icon);
 
 		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuilder();
-		bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
-		bufferbuilder.vertex(matrix, (float)x,			(float)(y + h),	0).uv(u0, v1).endVertex();
-		bufferbuilder.vertex(matrix, (float)(x + w),	(float)(y + h),	0).uv(u1, v1).endVertex();
-		bufferbuilder.vertex(matrix, (float)(x + w),	(float)y,		0).uv(u1, v0).endVertex();
-		bufferbuilder.vertex(matrix, (float)x,			(float)y,		0).uv(u0, v0).endVertex();
+		bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+		bufferbuilder.vertex(matrix, (float)x,			(float)(y + h),	0).color(1.0f, 1.0f, 1.0f, alpha).uv(u0, v1).endVertex();
+		bufferbuilder.vertex(matrix, (float)(x + w),	(float)(y + h),	0).color(1.0f, 1.0f, 1.0f, alpha).uv(u1, v1).endVertex();
+		bufferbuilder.vertex(matrix, (float)(x + w),	(float)y,		0).color(1.0f, 1.0f, 1.0f, alpha).uv(u1, v0).endVertex();
+		bufferbuilder.vertex(matrix, (float)x,			(float)y,		0).color(1.0f, 1.0f, 1.0f, alpha).uv(u0, v0).endVertex();
 		bufferbuilder.end();
+
 		WorldVertexBufferUploader.end(bufferbuilder);
 	}
 }

@@ -1,4 +1,4 @@
-package com.anthonyhilyard.merchantmarkers;
+package com.anthonyhilyard.merchantmarkers.compat;
 
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
@@ -8,26 +8,36 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import javax.imageio.ImageIO;
 
 import com.anthonyhilyard.iceberg.util.DynamicResourcePack;
+import com.anthonyhilyard.merchantmarkers.Loader;
+import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig.OverlayType;
 import com.anthonyhilyard.merchantmarkers.render.Markers;
 import com.anthonyhilyard.merchantmarkers.render.Markers.MarkerResource;
-import com.anthonyhilyard.merchantmarkers.util.NullInputStream;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
+import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.ResourcePackType;
 import net.minecraft.resources.SimpleReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.resource.IResourceType;
+import net.minecraftforge.resource.ISelectiveResourceReloadListener;
+import net.minecraftforge.resource.VanillaResourceType;
 
-public class FTBChunksHandler
+public class FTBChunksHandler implements ISelectiveResourceReloadListener
 {
+	private static FTBChunksHandler INSTANCE = new FTBChunksHandler();
 	private static DynamicResourcePack dynamicPack = new DynamicResourcePack("dynamicicons");
 	private static Entity currentEntity = null;
 	private static Map<MarkerResource, byte[]> iconCache = new HashMap<>();
@@ -35,7 +45,8 @@ public class FTBChunksHandler
 	private static BufferedImage numberOverlayImage = null;
 
 	public static ResourceLocation villagerTexture = new ResourceLocation("ftbchunks", "textures/faces/minecraft/villager.png");
-	
+	private static Supplier<InputStream> defaultVillagerResource = null;
+
 	public static void setCurrentEntity(Entity entity)
 	{
 		currentEntity = entity;
@@ -67,7 +78,7 @@ public class FTBChunksHandler
 		MarkerResource resource = resourceSupplier.get();
 		if (resource == null)
 		{
-			return NullInputStream.stream();
+			return Markers.getEmptyInputStream();
 		}
 
 		if (iconCache.containsKey(resource))
@@ -87,7 +98,7 @@ public class FTBChunksHandler
 		// Maybe it's just not loaded yet?  Bail for now.
 		if (!manager.hasResource(resource.texture) && Minecraft.getInstance().getTextureManager().getTexture(resource.texture) == null)
 		{
-			return NullInputStream.stream();
+			return Markers.getEmptyInputStream();
 		}
 
 		try
@@ -143,11 +154,11 @@ public class FTBChunksHandler
 		}
 		catch (Exception e)
 		{ 
-			Loader.LOGGER.error(e.toString());
+			Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
 
 		iconCache.put(resource, new byte[0]);
-		return NullInputStream.stream();
+		return Markers.getEmptyInputStream();
 	}
 
 	@SuppressWarnings("resource")
@@ -160,11 +171,38 @@ public class FTBChunksHandler
 		{
 			SimpleReloadableResourceManager reloadableManager = (SimpleReloadableResourceManager)manager;
 
+			if (!reloadableManager.listeners.contains(INSTANCE))
+			{
+				reloadableManager.listeners.add(0, INSTANCE);
+			}
+
+			// If we haven't grabbed the default villager texture yet, do so now.
+			if (defaultVillagerResource == null)
+			{
+				try
+				{
+					for (IResource resource : reloadableManager.getResources(villagerTexture))
+					{
+						// Return the first non-dynamic villager texture.
+						if (!resource.getSourceName().contentEquals("dynamicicons"))
+						{
+							final byte[] defaultVillagerBytes = IOUtils.toByteArray(resource.getInputStream());
+							defaultVillagerResource = () -> { return new ByteArrayInputStream(defaultVillagerBytes); };
+							break;
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					// Don't do anything, maybe the resource pack just isn't ready yet.
+				}
+			}
+
 			dynamicPack.registerResource(ResourcePackType.CLIENT_RESOURCES, villagerTexture, () -> {
 
 				if (currentEntity == null || (currentEntity instanceof VillagerEntity && ((VillagerEntity)currentEntity).isBaby()))
 				{
-					return NullInputStream.stream();
+					return Markers.getEmptyInputStream();
 				}
 
 				try
@@ -172,12 +210,18 @@ public class FTBChunksHandler
 					String profession = Markers.getProfessionName(currentEntity);
 					int level = Markers.getProfessionLevel(currentEntity);
 
+					// Return the default texture for blacklisted professions.
 					if (MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(profession))
 					{
-						return NullInputStream.stream();
+						return defaultVillagerResource == null ? Markers.getEmptyInputStream() : defaultVillagerResource.get();
 					}
 
 					InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(mc, profession, level));
+
+					// Stupid workaround, I know.  For some reason the proxy stream is sometimes not ready when it is returned,
+					// must be some sort of threaded timing issue?  In any case, this works.
+					Thread.sleep(1);
+
 					if (proxyStream.available() == 0)
 					{
 						return reloadableManager.getResource(Markers.getMarkerResource(mc, profession, level).texture).getInputStream();
@@ -189,7 +233,7 @@ public class FTBChunksHandler
 				}
 				catch (Exception e)
 				{
-					return NullInputStream.stream();
+					return Markers.getEmptyInputStream();
 				}
 			});
 
@@ -198,6 +242,16 @@ public class FTBChunksHandler
 			{
 				reloadableManager.add(dynamicPack);
 			}
+		}
+	}
+
+	@Override
+	public void onResourceManagerReload(IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate)
+	{
+		if (resourcePredicate.test(VanillaResourceType.TEXTURES))
+		{
+			Markers.clearResourceCache();
+			clearIconCache();
 		}
 	}
 }
