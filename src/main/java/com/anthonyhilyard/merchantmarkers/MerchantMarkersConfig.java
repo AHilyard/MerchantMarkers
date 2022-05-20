@@ -42,6 +42,8 @@ public class MerchantMarkersConfig extends IcebergConfig<MerchantMarkersConfig>
 	public final ConfigValue<UnmodifiableConfig> associatedItems;
 	public final ConfigValue<List<? extends String>> professionBlacklist;
 
+	public final BooleanValue enableOptifineWorkaround;
+
 	public enum MarkerType
 	{
 		ITEMS,
@@ -120,7 +122,11 @@ public class MerchantMarkersConfig extends IcebergConfig<MerchantMarkersConfig>
 
 		professionBlacklist = build.comment(" A list of professions to ignore when displaying markers. Use \"none\" for villagers with no profession.").define("profession_blacklist", Lists.newArrayList("none", "nitwit"));
 		associatedItems = build.comment(" The items associated with each villager profession.  Only used when marker type is set to \"items\".").defineSubconfig("associated_items", defaultAssociatedItems, k -> Objects.nonNull(k), v -> Objects.nonNull(v) && v instanceof String str && ResourceLocation.isValidResourceLocation(str));
-		
+
+		build.pop().push("compatibility_options");
+
+		enableOptifineWorkaround = build.comment(" If enabled, will force fast render on when using shaders with Optifine (due to a bug in Optifine, this is required for markers to render properly with some shaders).").define("optifine_workaround", true);
+
 		build.pop().pop();
 	}
 
@@ -129,7 +135,7 @@ public class MerchantMarkersConfig extends IcebergConfig<MerchantMarkersConfig>
 	 */
 	public boolean showLevels()
 	{
-		return OverlayType.LEVEL.equals(OverlayType.fromValue(INSTANCE.overlayIndex.get()).orElse(null));
+		return OverlayType.LEVEL.equals(OverlayType.fromValue(overlayIndex.get()).orElse(null));
 	}
 
 	public ResourceLocation getAssociatedItem(String profession)
@@ -158,11 +164,11 @@ public class MerchantMarkersConfig extends IcebergConfig<MerchantMarkersConfig>
 		{
 			if (ModList.get().isLoaded("xaerominimap"))
 			{
-				Class.forName("com.anthonyhilyard.merchantmarkers.XaeroHandler").getMethod("clearIconCache").invoke(null);
+				Class.forName("com.anthonyhilyard.merchantmarkers.compat.XaeroMinimapHandler").getMethod("clearIconCache").invoke(null);
 			}
 			if (ModList.get().isLoaded("ftbchunks"))
 			{
-				Class.forName("com.anthonyhilyard.merchantmarkers.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
+				Class.forName("com.anthonyhilyard.merchantmarkers.compat.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
 			}
 		}
 		catch (Exception e)

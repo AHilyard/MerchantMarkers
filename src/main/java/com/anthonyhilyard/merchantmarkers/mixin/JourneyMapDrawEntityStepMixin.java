@@ -52,14 +52,19 @@ public class JourneyMapDrawEntityStepMixin
 		if (entityLiving instanceof AbstractVillager && !((AbstractVillager)entityLiving).isBaby())
 		{
 			String profession = Markers.getProfessionName(entityLiving);
-			int level = Markers.getProfessionLevel(entityLiving);
-			MarkerResource markerResource = Markers.getMarkerResource(minecraft, profession, level);
-	
-			if (!textureCache.containsKey(markerResource))
+
+			// Return the default texture for blacklisted professions.
+			if (!MerchantMarkersConfig.getInstance().professionBlacklist.get().contains(profession))
 			{
-				textureCache.put(markerResource, new TextureImpl(getMarkerImage(markerResource), true));
+				int level = Markers.getProfessionLevel(entityLiving);
+				MarkerResource markerResource = Markers.getMarkerResource(minecraft, profession, level);
+		
+				if (!textureCache.containsKey(markerResource))
+				{
+					textureCache.put(markerResource, new TextureImpl(getMarkerImage(markerResource), true));
+				}
+				texture = textureCache.get(markerResource);
 			}
-			texture = textureCache.get(markerResource);
 		}
 
 		DrawUtil.drawEntity(poseStack, x, y, heading, texture, alpha, scale, rotation);

@@ -5,6 +5,8 @@ import org.apache.logging.log4j.Logger;
 
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.IExtensionPoint;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -27,5 +29,7 @@ public class Loader
 			FMLJavaModLoadingContext.get().getModEventBus().addListener(mod::onClientSetup);
 			MinecraftForge.EVENT_BUS.register(MerchantMarkers.class);
 		}
+
+		ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> "ANY", (remote, isServer) -> true));
 	}
 }

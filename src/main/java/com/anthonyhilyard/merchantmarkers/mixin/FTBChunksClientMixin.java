@@ -1,7 +1,7 @@
 package com.anthonyhilyard.merchantmarkers.mixin;
 
-import com.anthonyhilyard.merchantmarkers.FTBChunksHandler;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
+import com.anthonyhilyard.merchantmarkers.compat.FTBChunksHandler;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import org.spongepowered.asm.mixin.Mixin;
