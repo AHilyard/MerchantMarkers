@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.2.1
+- Fixed a stall / crash that occurred when JourneyMap version 5.8.5 was installed.
+- Changed update check URL to a working service.
+
 ### 1.2.0
 - Added icons for More Villagers professions.
 - Fixed compatibility with FTB Chunks.

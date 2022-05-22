@@ -63,7 +63,7 @@ dependencies {
 	compileOnly fg.deobf('curse.maven:xaerominimap-263420:3778432')
 	compileOnly fg.deobf('curse.maven:ftblibrary-404465:3553840')
 	compileOnly fg.deobf('curse.maven:ftbchunks-314906:3603374')
-	compileOnly fg.deobf('curse.maven:journeymap-32274:3796374')
+	compileOnly fg.deobf('curse.maven:journeymap-32274:3798644')
 }
 
 jar {

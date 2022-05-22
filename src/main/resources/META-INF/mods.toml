@@ -7,7 +7,7 @@ modId="merchantmarkers"
 version="${file.jarVersion}"
 displayName="Merchant Markers"
 displayURL="https://anthonyhilyard.com/"
-updateJSONURL="https://mc-curse-update-checker.herokuapp.com/549275"
+updateJSONURL="https://mc-update-check.anthonyhilyard.com/549275"
 logoFile="icon.png"
 authors="Grend"
 description='''Adds floating markers above villagers to indicate their professions.'''
@@ -50,6 +50,6 @@ description='''Adds floating markers above villagers to indicate their professio
 [[dependencies.merchantmarkers]]
 	modId="journeymap"
 	mandatory=false
-	versionRange="[5.8.4,)"
+	versionRange="[5.8.5,)"
 	ordering="BEFORE"
 	side="BOTH"

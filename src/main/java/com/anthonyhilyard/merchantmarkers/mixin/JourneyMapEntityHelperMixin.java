@@ -16,13 +16,11 @@ public class JourneyMapEntityHelperMixin
 	 * Bug fix so that villagers actually show up on the map.
 	 */
 	@Inject(method = "isSpecialCreature", at = @At("HEAD"), cancellable = true)
-	private static boolean isSpecialCreature(Entity entity, boolean hostile, CallbackInfoReturnable<Boolean> info)
+	private static void isSpecialCreature(Entity entity, boolean hostile, CallbackInfoReturnable<Boolean> info)
 	{
 		if (AbstractVillagerEntity.class.isAssignableFrom(entity.getClass()))
 		{
 			info.setReturnValue(!hostile);
-			return false;
 		}
-		return true;
 	}
 }

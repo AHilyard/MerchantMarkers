@@ -22,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import journeymap.client.render.draw.DrawEntityStep;
 import journeymap.client.render.draw.DrawUtil;
+import journeymap.client.render.texture.JMTexture;
 import journeymap.client.render.texture.TextureImpl;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
@@ -40,13 +41,13 @@ public class JourneyMapDrawEntityStepMixin
 	private static BufferedImage iconOverlayImage = null;
 	private static BufferedImage numberOverlayImage = null;
 
-	private static Map<MarkerResource, TextureImpl> textureCache = new HashMap<>();
+	private static Map<MarkerResource, JMTexture> textureCache = new HashMap<>();
 
-	@Redirect(method = "drawCreature", at = @At(value = "INVOKE", target = "Ljourneymap/client/render/draw/DrawUtil;drawEntity(Lcom/mojang/blaze3d/matrix/MatrixStack;DDDLjourneymap/client/render/texture/TextureImpl;FFD)V", remap = false))
-	private void drawEntity(MatrixStack matrixStack, double x, double y, double heading, TextureImpl textureIn, float alpha, float scale, double rotation)
+	@Redirect(method = "drawCreature", at = @At(value = "INVOKE", target = "Ljourneymap/client/render/draw/DrawUtil;drawEntity(Lcom/mojang/blaze3d/matrix/MatrixStack;DDDLjourneymap/client/render/texture/JMTexture;FFD)V", remap = false))
+	private void drawEntity(final MatrixStack matrixStack, double x, double y, double heading, JMTexture textureIn, float alpha, float scale, double rotation)
 	{
 		LivingEntity entityLiving = entityLivingRef.get();
-		TextureImpl texture = textureIn;
+		JMTexture texture = textureIn;
 
 		// If this entity is marker-able, update the texture before drawing.
 		if (entityLiving instanceof AbstractVillagerEntity && !((AbstractVillagerEntity)entityLiving).isBaby())
