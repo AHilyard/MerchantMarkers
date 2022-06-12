@@ -16,9 +16,9 @@ apply plugin: 'eclipse'
 archivesBaseName = project.name + '-' + project.mcVersion
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
-    }
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(8)
+	}
 }
 
 mixin {
@@ -40,7 +40,7 @@ minecraft {
 			arg "-mixin.debug=true"
 			arg "-mixin.checks.interfaces=true"
 			property 'mixin.env.remapRefMap', 'true'
-			property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+			property 'mixin.env.refMapRemappingFile', "${projectDir}/build/extractSrg/output.srg"
 		}
 	}
 }

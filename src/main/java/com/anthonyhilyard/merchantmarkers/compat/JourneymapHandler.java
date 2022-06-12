@@ -3,6 +3,9 @@ package com.anthonyhilyard.merchantmarkers.compat;
 import com.anthonyhilyard.merchantmarkers.Loader;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
 import com.anthonyhilyard.merchantmarkers.render.Markers;
+
+import org.apache.commons.lang3.StringUtils;
+
 import journeymap.client.api.ClientPlugin;
 import journeymap.client.api.IClientAPI;
 import journeymap.client.api.IClientPlugin;
@@ -21,42 +24,49 @@ import java.util.Collections;
 public class JourneymapHandler implements IClientPlugin
 {
 
-    @Override
-    public void initialize(IClientAPI iClientAPI)
-    {
-        MinecraftForge.EVENT_BUS.register(this);
-    }
+	@Override
+	public void initialize(IClientAPI iClientAPI)
+	{
+		MinecraftForge.EVENT_BUS.register(this);
+	}
 
-    @Override
-    public String getModId()
-    {
-        return Loader.MODID;
-    }
+	@Override
+	public String getModId()
+	{
+		return Loader.MODID;
+	}
 
-    @Override
-    public void onEvent(ClientEvent clientEvent)
-    {
+	@Override
+	public void onEvent(ClientEvent clientEvent)
+	{
 
-    }
+	}
 
-    @SubscribeEvent
-    public void onEntityUpdate(EntityRadarUpdateEvent event)
-    {
-        LivingEntity entity = event.getWrappedEntity().getEntityLivingRef().get();
+	@SubscribeEvent
+	public void onEntityUpdate(EntityRadarUpdateEvent event)
+	{
+		// If we are showing custom icons on the minimap, replace the standard JourneyMap icons now.
+		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get())
+		{
+			LivingEntity entity = event.getWrappedEntity().getEntityLivingRef().get();
 
-        // If this entity is marker-able, update the texture before drawing.
-        if (entity instanceof AbstractVillagerEntity && !(entity).isBaby())
-        {
-            String profession = Markers.getProfessionName(entity);
+			// If this entity is marker-able, update the texture before drawing.
+			if (entity instanceof AbstractVillagerEntity && !(entity).isBaby())
+			{
+				String profession = Markers.getProfessionName(entity);
 
-            // Return the default texture for blacklisted professions.
-            if (!MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(profession))
-            {
-                int level = Markers.getProfessionLevel(entity);
-                event.getWrappedEntity().setEntityIconLocation(Markers.getMarkerResource(Minecraft.getInstance(), profession, level).texture);
-                // let's give them a fun mouseover tooltip!
-                event.getWrappedEntity().setEntityToolTips(Collections.singletonList(new StringTextComponent(profession)));
-            }
-        }
-    }
+				// Return the default texture for blacklisted professions.
+				if (!MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(profession))
+				{
+					final Minecraft mc = Minecraft.getInstance();
+					int level = Markers.getProfessionLevel(entity);
+					event.getWrappedEntity().setEntityIconLocation(Markers.getMarkerResource(mc, profession, level).texture);
+
+					// Let's give them a fun mouseover tooltip!
+					String formattedProfession = StringUtils.capitalize(profession.replace("_", " ").toLowerCase());
+					event.getWrappedEntity().setEntityToolTips(Collections.singletonList(new StringTextComponent(formattedProfession)));
+				}
+			}
+		}
+	}
 }
