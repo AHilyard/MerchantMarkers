@@ -34,7 +34,7 @@ public class FTBChunksClientMixin
 		return EntityIcons.get(entity);
 	}
 
-	@Redirect(method = "mapIcons", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityType;getCategory()Lnet/minecraft/entity/EntityClassification;"))
+	@Redirect(method = "mapIcons", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityType;getCategory()Lnet/minecraft/entity/EntityClassification;"), remap = false)
 	public EntityClassification redirectGetCategory(EntityType<?> entityType)
 	{
 		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get())

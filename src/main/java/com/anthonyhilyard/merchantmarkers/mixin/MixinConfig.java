@@ -34,12 +34,6 @@ public class MixinConfig implements IMixinConfigPlugin
 			return loadingModList.getMods().stream().anyMatch(modInfo -> modInfo.getModId().contentEquals("ftbchunks"));
 		}
 
-		// Same for "journeymap".
-		if (mixinClassName.toLowerCase().contains("journeymap"))
-		{
-			return loadingModList.getMods().stream().anyMatch(modInfo -> modInfo.getModId().contentEquals("journeymap"));
-		}
-
 		return true;
 	}
 
