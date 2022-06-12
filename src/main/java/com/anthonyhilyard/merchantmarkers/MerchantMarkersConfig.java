@@ -82,18 +82,18 @@ public class MerchantMarkersConfig
 	private static Map<String, String> defaultAssociatedItems = new LinkedHashMap<String, String>() {{
 		put("armorer",				"minecraft:iron_chestplate");
 		put("butcher",				"minecraft:beef");
-		put("cartographer",		"minecraft:compass");
+		put("cartographer",			"minecraft:compass");
 		put("cleric",				"minecraft:rotten_flesh");
 		put("farmer",				"minecraft:wheat");
 		put("fisherman",			"minecraft:cod");
-		put("fletcher",			"minecraft:bow");
+		put("fletcher",				"minecraft:bow");
 		put("leatherworker",		"minecraft:leather");
 		put("librarian",			"minecraft:bookshelf");
 		put("mason",				"minecraft:brick");
-		put("shepherd",			"minecraft:shears");
+		put("shepherd",				"minecraft:shears");
 		put("toolsmith",			"minecraft:iron_pickaxe");
 		put("weaponsmith",			"minecraft:iron_sword");
-		put("wandering_trader",	"minecraft:emerald");
+		put("wandering_trader",		"minecraft:emerald");
 	}};
 
 	static
