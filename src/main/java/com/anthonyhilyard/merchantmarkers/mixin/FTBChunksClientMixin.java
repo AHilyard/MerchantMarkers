@@ -18,15 +18,18 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.registries.ForgeRegistries;
 
 @Mixin(FTBChunksClient.class)
 public class FTBChunksClientMixin
 {
+	private final static ResourceLocation VILLAGER_LOCATION = new ResourceLocation("villager");
+
 	@Redirect(method = "mapIcons", at = @At(value = "INVOKE", target = "Ldev/ftb/mods/ftbchunks/client/EntityIcons;get(Lnet/minecraft/world/entity/Entity;)Ldev/ftb/mods/ftblibrary/icon/Icon;", remap = false), remap = false)
 	public Icon redirectGet(Entity entity)
 	{
 		// If this is a villager, return the dynamic texture instead of the default one.
-		if (MerchantMarkersConfig.getInstance().showOnMiniMap.get() && entity.getType().getRegistryName().equals(new ResourceLocation("villager")))
+		if (MerchantMarkersConfig.getInstance().showOnMiniMap.get() &&  ForgeRegistries.ENTITIES.getKey(entity.getType()).equals(VILLAGER_LOCATION))
 		{
 			return Icon.getIcon(FTBChunksHandler.villagerTexture);
 		}
@@ -40,7 +43,7 @@ public class FTBChunksClientMixin
 		if (MerchantMarkersConfig.getInstance().showOnMiniMap.get())
 		{
 			// Redirect the getCategory call to tell FTB Chunks that villagers aren't "Misc" category (so they aren't skipped).
-			if (entityType.getRegistryName().equals(new ResourceLocation("villager")))
+			if (ForgeRegistries.ENTITIES.getKey(entityType).equals(VILLAGER_LOCATION))
 			{
 				return MobCategory.CREATURE;
 			}
@@ -57,7 +60,7 @@ public class FTBChunksClientMixin
 			Entity entity = entityIcon.entity;
 
 			// If this is a villager, return the dynamic texture instead of the default one.
-			if (MerchantMarkersConfig.getInstance().showOnMiniMap.get() && entity.getType().getRegistryName().equals(new ResourceLocation("villager")))
+			if (MerchantMarkersConfig.getInstance().showOnMiniMap.get() && ForgeRegistries.ENTITIES.getKey(entity.getType()).equals(VILLAGER_LOCATION))
 			{
 				FTBChunksHandler.setCurrentEntity(entity);
 			}

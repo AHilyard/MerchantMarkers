@@ -101,7 +101,7 @@ public class XaeroMinimapHandler implements ResourceManagerReloadListener
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 
 		// Maybe it's just not loaded yet?  Bail for now.
-		if (!manager.hasResource(resource.texture()) && Minecraft.getInstance().getTextureManager().getTexture(resource.texture(), null) == null)
+		if (manager.getResource(resource.texture()).isEmpty() && Minecraft.getInstance().getTextureManager().getTexture(resource.texture(), null) == null)
 		{
 			return Markers.getEmptyInputStream();
 		}
@@ -111,14 +111,14 @@ public class XaeroMinimapHandler implements ResourceManagerReloadListener
 			// Lazy-load the overlay images now if needed.
 			if (iconOverlayImage == null)
 			{
-				iconOverlayImage = ImageIO.read(manager.getResource(Markers.ICON_OVERLAY).getInputStream());
+				iconOverlayImage = ImageIO.read(manager.getResource(Markers.ICON_OVERLAY).get().open());
 			}
 			if (numberOverlayImage == null)
 			{
-				numberOverlayImage = ImageIO.read(manager.getResource(Markers.NUMBER_OVERLAY).getInputStream());
+				numberOverlayImage = ImageIO.read(manager.getResource(Markers.NUMBER_OVERLAY).get().open());
 			}
 
-			BufferedImage originalImage = ImageIO.read(manager.getResource(resource.texture()).getInputStream());
+			BufferedImage originalImage = ImageIO.read(manager.getResource(resource.texture()).get().open());
 			final int left = (outerSize - innerSize) / 2;
 			final int right = (outerSize + innerSize) / 2;
 			final int top = (outerSize + innerSize) / 2;
@@ -164,7 +164,7 @@ public class XaeroMinimapHandler implements ResourceManagerReloadListener
 
 		if (manager instanceof ReloadableResourceManager reloadableManager)
 		{
-			Supplier<Collection<ResourceLocation>> delayedResources = () -> reloadableManager.listResources("textures/entity/villager/markers", s -> s.endsWith(".png"));
+			Supplier<Collection<ResourceLocation>> delayedResources = () -> reloadableManager.listResources("textures/entity/villager/markers", s -> s.toString().endsWith(".png")).keySet();
 
 			if (!reloadableManager.listeners.contains(INSTANCE))
 			{
@@ -233,7 +233,7 @@ public class XaeroMinimapHandler implements ResourceManagerReloadListener
 								InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(minecraft, iconName, level));
 								if (proxyStream.available() == 0)
 								{
-									return reloadableManager.getResource(Markers.getMarkerResource(minecraft, iconName, level).texture()).getInputStream();
+									return reloadableManager.getResource(Markers.getMarkerResource(minecraft, iconName, level).texture()).get().open();
 								}
 								else
 								{

@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[40,)"
+loaderVersion="[41,)"
 license="CC BY-NC-ND 4.0"
 
 [[mods]]
@@ -7,7 +7,7 @@ modId="merchantmarkers"
 version="${file.jarVersion}"
 displayName="Merchant Markers"
 displayURL="https://anthonyhilyard.com/"
-updateJSONURL="https://mc-curse-update-checker.herokuapp.com/549275"
+updateJSONURL="https://mc-update-check.anthonyhilyard.com/549275"
 logoFile="icon.png"
 authors="Grend"
 description='''Adds floating markers above villagers to indicate their professions.'''
@@ -15,41 +15,41 @@ description='''Adds floating markers above villagers to indicate their professio
 [[dependencies.merchantmarkers]]
 	modId="forge"
 	mandatory=true
-	versionRange="[40,)"
+	versionRange="[41,)"
 	ordering="NONE"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
 	modId="minecraft"
 	mandatory=true
-	versionRange="[1.18.2,1.19)"
+	versionRange="[1.19,)"
 	ordering="NONE"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
 	modId="iceberg"
 	mandatory=true
-	versionRange="[1.0.41,)"
+	versionRange="[1.0.44,)"
 	ordering="NONE"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
 	modId="xaerominimap"
 	mandatory=false
-	versionRange="[21.22.3,)"
+	versionRange="[22.9.3,)"
 	ordering="BEFORE"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
 	modId="ftbchunks"
 	mandatory=false
-	versionRange="[1801.3.3,)"
+	versionRange="[1900.3.7,)"
 	ordering="BEFORE"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
 	modId="journeymap"
 	mandatory=false
-	versionRange="[5.8.0beta11,)"
+	versionRange="[5.8.5rc2,)"
 	ordering="BEFORE"
 	side="BOTH"

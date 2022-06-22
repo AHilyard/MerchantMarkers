@@ -8,10 +8,9 @@ import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
@@ -83,7 +82,7 @@ public class OptifineHandler implements ResourceManagerReloadListener
 				// Output a message to the user so they know the setting was changed.
 				if (minecraft.player != null)
 				{
-					minecraft.player.sendMessage(new TextComponent(warningMessage).withStyle(ChatFormatting.GOLD), Util.NIL_UUID);
+					minecraft.player.sendSystemMessage(Component.literal(warningMessage).withStyle(ChatFormatting.GOLD));
 				}
 				else
 				{

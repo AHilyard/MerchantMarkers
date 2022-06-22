@@ -1,36 +1,29 @@
 package com.anthonyhilyard.merchantmarkers.render;
 
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.anthonyhilyard.merchantmarkers.Loader;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig.OverlayType;
-import com.anthonyhilyard.merchantmarkers.compat.OptifineHandler;
 import com.google.common.base.Supplier;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -74,7 +67,7 @@ public class Markers
 				final ResourceManager manager = mc.getResourceManager();
 				try
 				{
-					return manager.getResource(Markers.EMPTY_MARKER).getInputStream();
+					return manager.getResource(Markers.EMPTY_MARKER).get().open();
 				}
 				catch (Exception e)
 				{
@@ -247,7 +240,7 @@ public class Markers
 				VillagerProfession profession = Registry.VILLAGER_PROFESSION.get(new ResourceLocation(professionName.replace("__", ":")));
 				if (profession != VillagerProfession.NONE)
 				{
-					Set<BlockState> jobBlockStates = profession.getJobPoiType().getBlockStates();
+					List<BlockState> jobBlockStates = ForgeRegistries.POI_TYPES.getValues().stream().filter((poiType) -> profession.acquirableJobSite().test(ForgeRegistries.POI_TYPES.getHolder(poiType).get())).<BlockState>flatMap(poiType -> poiType.matchingStates().stream()).distinct().toList();
 
 					if (!jobBlockStates.isEmpty())
 					{
@@ -266,7 +259,7 @@ public class Markers
 			{
 				// Check if the given resource exists, otherwise use the default icon.
 				ResourceLocation iconResource = new ResourceLocation(Loader.MODID, String.format("textures/entity/villager/markers/%s.png", professionName));
-				if (mc.getResourceManager().hasResource(iconResource))
+				if (mc.getResourceManager().getResource(iconResource).isPresent())
 				{
 					result = new MarkerResource(iconResource, overlayType, level);
 				}
@@ -366,98 +359,7 @@ public class Markers
 		bufferbuilder.vertex(matrix, (float)(x + w),	(float)(y + h),	0).uv(u1, v1).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
 		bufferbuilder.vertex(matrix, (float)(x + w),	(float)y,		0).uv(u1, v0).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
 		bufferbuilder.vertex(matrix, (float)x,			(float)y,		0).uv(u0, v0).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
-		bufferbuilder.end();
-
-		if (OptifineHandler.optifineInstalled())
-		{
-			Pair<BufferBuilder.DrawState, ByteBuffer> pair = bufferbuilder.popNextBuffer();
-			BufferBuilder.DrawState drawState = pair.getFirst();
-			_end(pair.getSecond(), drawState.mode(), drawState.format(), drawState.vertexCount(), drawState.indexType(), drawState.indexCount(), drawState.sequentialIndex());
-		}
-		else
-		{
-			BufferUploader.end(bufferbuilder);
-		}
+		BufferUploader.drawWithShader(bufferbuilder.end());
 	}
 
-	private static void _end(ByteBuffer byteBuffer, VertexFormat.Mode vertexMode, VertexFormat vertexFormat, int vertexCount, VertexFormat.IndexType indexType, int indexCount, boolean sequentialIndex)
-	{
-		RenderSystem.assertOnRenderThread();
-		byteBuffer.clear();
-		if (vertexCount > 0)
-		{
-			int i = vertexCount * vertexFormat.getVertexSize();
-			updateVertexSetup(vertexFormat);
-			byteBuffer.position(0);
-			byteBuffer.limit(i);
-			GlStateManager._glBufferData(34962, byteBuffer, 35048);
-			int j;
-			if (sequentialIndex)
-			{
-				RenderSystem.AutoStorageIndexBuffer rendersystem$autostorageindexbuffer = RenderSystem.getSequentialBuffer(vertexMode, indexCount);
-				int k = rendersystem$autostorageindexbuffer.name();
-				GlStateManager._glBindBuffer(34963, k);
-				j = rendersystem$autostorageindexbuffer.type().asGLType;
-			}
-			else
-			{
-				int i1 = vertexFormat.getOrCreateIndexBufferObject();
-				GlStateManager._glBindBuffer(34963, i1);
-
-
-				byteBuffer.position(i);
-				byteBuffer.limit(i + indexCount * indexType.bytes);
-				GlStateManager._glBufferData(34963, byteBuffer, 35048);
-				j = indexType.asGLType;
-			}
-
-			ShaderInstance shaderinstance = RenderSystem.getShader();
-
-			for (int j1 = 0; j1 < 8; ++j1)
-			{
-				int l = RenderSystem.getShaderTexture(j1);
-				shaderinstance.setSampler("Sampler" + j1, l);
-			}
-
-			if (shaderinstance.MODEL_VIEW_MATRIX != null) { shaderinstance.MODEL_VIEW_MATRIX.set(RenderSystem.getModelViewMatrix()); }
-
-			if (shaderinstance.PROJECTION_MATRIX != null) { shaderinstance.PROJECTION_MATRIX.set(RenderSystem.getProjectionMatrix()); }
-
-			if (shaderinstance.INVERSE_VIEW_ROTATION_MATRIX != null) { shaderinstance.INVERSE_VIEW_ROTATION_MATRIX.set(RenderSystem.getInverseViewRotationMatrix()); }
-
-			if (shaderinstance.COLOR_MODULATOR != null) { shaderinstance.COLOR_MODULATOR.set(RenderSystem.getShaderColor()); }
-
-			if (shaderinstance.FOG_START != null) { shaderinstance.FOG_START.set(RenderSystem.getShaderFogStart()); }
-
-			if (shaderinstance.FOG_END != null) { shaderinstance.FOG_END.set(RenderSystem.getShaderFogEnd()); }
-
-			if (shaderinstance.FOG_COLOR != null) { shaderinstance.FOG_COLOR.set(RenderSystem.getShaderFogColor()); }
-
-			if (shaderinstance.FOG_SHAPE != null) { shaderinstance.FOG_SHAPE.set(RenderSystem.getShaderFogShape().getIndex()); }
-
-			if (shaderinstance.TEXTURE_MATRIX != null) { shaderinstance.TEXTURE_MATRIX.set(RenderSystem.getTextureMatrix()); }
-
-			if (shaderinstance.GAME_TIME != null) { shaderinstance.GAME_TIME.set(RenderSystem.getShaderGameTime()); }
-
-			if (shaderinstance.SCREEN_SIZE != null)
-			{
-				Window window = Minecraft.getInstance().getWindow();
-				shaderinstance.SCREEN_SIZE.set((float)window.getWidth(), (float)window.getHeight());
-			}
-
-			RenderSystem.setupShaderLights(shaderinstance);
-			shaderinstance.apply();
-			GlStateManager._drawElements(vertexMode.asGLMode, indexCount, j, 0L);
-			shaderinstance.clear();
-			byteBuffer.position(0);
-		}
-	 }
-
-	 private static void updateVertexSetup(VertexFormat vertexFormat)
-	 {
-		BufferUploader.reset();
-		GlStateManager._glBindVertexArray(vertexFormat.getOrCreateVertexArrayObject());
-		GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, vertexFormat.getOrCreateVertexBufferObject());
-		vertexFormat.setupBufferState();
-	 }
 }
