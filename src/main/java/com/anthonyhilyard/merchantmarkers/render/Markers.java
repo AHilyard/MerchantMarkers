@@ -2,8 +2,8 @@ package com.anthonyhilyard.merchantmarkers.render;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 
 import com.anthonyhilyard.merchantmarkers.Loader;
@@ -66,7 +66,7 @@ public class Markers
 				final ResourceManager manager = mc.getResourceManager();
 				try
 				{
-					return manager.getResource(Markers.EMPTY_MARKER).getInputStream();
+					return manager.getResource(Markers.EMPTY_MARKER).get().open();
 				}
 				catch (Exception e)
 				{
@@ -238,7 +238,10 @@ public class Markers
 				VillagerProfession profession = Registry.VILLAGER_PROFESSION.get(new ResourceLocation(professionName.replace("__", ":")));
 				if (profession != VillagerProfession.NONE)
 				{
-					Set<BlockState> jobBlockStates = profession.getJobPoiType().matchingStates;
+					List<BlockState> jobBlockStates = Registry.POINT_OF_INTEREST_TYPE.registryKeySet().stream()
+						.map(key -> Registry.POINT_OF_INTEREST_TYPE.getHolder(key).get())
+						.filter(poiType -> profession.acquirableJobSite().test(poiType))
+						.<BlockState>flatMap(poiType -> poiType.unwrap().right().get().matchingStates().stream()).distinct().toList();
 
 					if (!jobBlockStates.isEmpty())
 					{
@@ -257,7 +260,7 @@ public class Markers
 			{
 				// Check if the given resource exists, otherwise use the default icon.
 				ResourceLocation iconResource = new ResourceLocation(Loader.MODID, String.format("textures/entity/villager/markers/%s.png", professionName));
-				if (mc.getResourceManager().hasResource(iconResource))
+				if (mc.getResourceManager().getResource(iconResource).isPresent())
 				{
 					result = new MarkerResource(iconResource, overlayType, level);
 				}
@@ -357,8 +360,7 @@ public class Markers
 		bufferbuilder.vertex(matrix, (float)(x + w),	(float)(y + h),		0).uv(u1, v1).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
 		bufferbuilder.vertex(matrix, (float)(x + w),	(float)y,			0).uv(u1, v0).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
 		bufferbuilder.vertex(matrix, (float)x,			(float)y,			0).uv(u0, v0).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
-		bufferbuilder.end();
 
-		BufferUploader.end(bufferbuilder);
+		BufferUploader.drawWithShader(bufferbuilder.end());
 	}
 }

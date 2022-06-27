@@ -14,7 +14,7 @@ import journeymap.client.api.event.fabric.FabricEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.npc.AbstractVillager;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 import java.util.Collections;
 
@@ -56,7 +56,7 @@ public class JourneymapHandler implements IClientPlugin
 
 					// Let's give them a fun mouseover tooltip!
 					String formattedProfession = StringUtils.capitalize(profession.replace("_", " ").toLowerCase());
-					event.getWrappedEntity().setEntityToolTips(Collections.singletonList(new TextComponent(formattedProfession)));
+					event.getWrappedEntity().setEntityToolTips(Collections.singletonList(Component.literal(formattedProfession)));
 				}
 			}
 		}

@@ -101,7 +101,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 
 		// Maybe it's just not loaded yet?  Bail for now.
-		if (!manager.hasResource(resource.texture()) && Minecraft.getInstance().getTextureManager().getTexture(resource.texture()) == null)
+		if (manager.getResource(resource.texture()).isEmpty() && Minecraft.getInstance().getTextureManager().getTexture(resource.texture()) == null)
 		{
 			return Markers.getEmptyInputStream();
 		}
@@ -111,14 +111,14 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 			// Lazy-load the overlay images now if needed.
 			if (iconOverlayImage == null)
 			{
-				iconOverlayImage = ImageIO.read(manager.getResource(Markers.ICON_OVERLAY).getInputStream());
+				iconOverlayImage = ImageIO.read(manager.getResource(Markers.ICON_OVERLAY).get().open());
 			}
 			if (numberOverlayImage == null)
 			{
-				numberOverlayImage = ImageIO.read(manager.getResource(Markers.NUMBER_OVERLAY).getInputStream());
+				numberOverlayImage = ImageIO.read(manager.getResource(Markers.NUMBER_OVERLAY).get().open());
 			}
 
-			BufferedImage originalImage = ImageIO.read(manager.getResource(resource.texture()).getInputStream());
+			BufferedImage originalImage = ImageIO.read(manager.getResource(resource.texture()).get().open());
 			final int left = (outerSize - innerSize) / 2;
 			final int right = (outerSize + innerSize) / 2;
 			final int top = (outerSize + innerSize) / 2;
@@ -184,12 +184,12 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 			{
 				try
 				{
-					for (Resource resource : reloadableManager.getResources(villagerTexture))
+					for (Resource resource : reloadableManager.getResourceStack(villagerTexture))
 					{
 						// Return the first non-dynamic villager texture.
-						if (!resource.getSourceName().contentEquals("dynamicicons"))
+						if (!resource.sourcePackId().contentEquals("dynamicicons"))
 						{
-							final byte[] defaultVillagerBytes = IOUtils.toByteArray(resource.getInputStream());
+							final byte[] defaultVillagerBytes = IOUtils.toByteArray(resource.open());
 							defaultVillagerResource = () -> {
 								return new ByteArrayInputStream(defaultVillagerBytes); 
 							};
@@ -229,7 +229,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 
 					if (proxyStream.available() == 0)
 					{
-						return reloadableManager.getResource(Markers.getMarkerResource(minecraft, profession, level).texture()).getInputStream();
+						return reloadableManager.getResource(Markers.getMarkerResource(minecraft, profession, level).texture()).get().open();
 					}
 					else
 					{

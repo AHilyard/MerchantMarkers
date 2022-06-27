@@ -35,15 +35,15 @@
 	"depends": {
 		"fabricloader": ">=0.14.6",
 		"fabric": "*",
-		"minecraft": ">=1.18.2",
+		"minecraft": "~1.19",
 		"java": ">=17",
-		"forgeconfigapiport": ">=3.2.0",
+		"forgeconfigapiport": ">=4.0",
 		"iceberg": ">=1.0.38"
 	},
 	"suggests": {
-		"xaerominimap": ">=22.8.0",
-		"ftbchunks": ">=1802.3.6",
-		"journeymap": ">=5.8.4"
+		"xaerominimap": ">=22.9.3",
+		"ftbchunks": ">=1900.3.7",
+		"journeymap": ">=5.8.5"
 	},
 	"custom": {
 		"modupdater": {

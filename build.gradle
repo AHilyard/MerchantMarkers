@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.10-SNAPSHOT'
+	id 'fabric-loom' version '0.12-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -15,6 +15,10 @@ repositories {
 	maven {
 		name = "CurseMaven"
 		url = "https://www.cursemaven.com"
+	}
+	maven {
+		name = "Fuzs Mod Resources"
+		url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/"
 	}
 	maven {
 		name = "JourneyMap (Public)"
@@ -41,25 +45,18 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loaderVersion}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabricVersion}"
 
-	modImplementation 'curse.maven:forgeconfigapiport-547434:3671141'
-	implementation 'com.electronwill.night-config:core:3.6.3'
-	implementation 'com.electronwill.night-config:toml:3.6.3'
-
-	modImplementation 'curse.maven:iceberg-539382:3546762'
-	modApi 'curse.maven:xaerominimap-263420:3798916'
-	//modApi 'curse.maven:ftblibrary-438495:3794622'
-	//modApi 'curse.maven:ftbchunks-472657:3787347'
-	modApi 'dev.ftb.mods:ftb-chunks-fabric:1802.3.6-build.147'
-	modApi group: 'info.journeymap', name: 'journeymap-api', version: '1.18.2-1.9-fabric-SNAPSHOT', changing: true
+	modImplementation "net.minecraftforge:forgeconfigapiport-fabric:${forgeConfigApiVersion}"
+	modImplementation 'curse.maven:iceberg-539382:3832794'
+	modApi 'curse.maven:xaerominimap-263420:3835774'
+	modApi 'dev.ftb.mods:ftb-chunks-fabric:1900.3.7-build.154'
+	modApi group: 'info.journeymap', name: 'journeymap-api', version: '1.19-1.8-fabric-SNAPSHOT', changing: true
 }
 
 loom {
 	accessWidenerPath = file("src/main/resources/${project.name.toLowerCase()}.accesswidener")
 }
 
-// Process resources on build
 processResources {
-	// This will ensure that this task is redone when the versions change.
 	inputs.property 'version', project.version
 
 	filesMatching("fabric.mod.json") {
