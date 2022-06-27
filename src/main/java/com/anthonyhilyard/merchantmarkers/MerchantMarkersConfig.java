@@ -109,13 +109,13 @@ public class MerchantMarkersConfig
 
 		showThroughWalls = build.comment(" If markers should be visible through walls and other obstructions.").define("show_through_walls", true);
 		showArrow = build.comment(" If markers should include an arrow under the profession-specific icon.").define("show_arrow", true);
-		showOnMiniMap = build.comment(" If icons should show on minimaps. (Currently supports Xaero's Minimap).").define("show_on_minimap", true);
+		showOnMiniMap = build.comment(" If icons should show on minimaps. (Currently supports Xaero's Minimap, FTB Chunks, and JourneyMap).").define("show_on_minimap", true);
 		overlayIndex = build.comment(" Which overlay graphic to use (0 = backpack, 1 = emerald, 2 = coin stack, 3 = bag, 4 = profession level, -1 = none).").defineInRange("overlay_icon", 3, -1, 4);
 		opacity = build.comment(" The opacity of displayed markers and arrows.").defineInRange("opacity", 1.0, 0.1, 1.0);
 		maxDistance = build.comment(" The maximum distance, in blocks, at which markers are visible.").defineInRange("max_distance", 64.0, 16.0, 256.0);
 		fadePercent = build.comment(" The percent of the maximum distance at which markers will begin to fade out.").defineInRange("fade_percent", 25.0, 0.0, 100.0);
 		iconScale = build.comment(" How large in-world markers should appear.").defineInRange("icon_scale", 1.0, 0.5, 2.0);
-		minimapIconScale = build.comment(" How large markers should appear on minimaps.").defineInRange("minimap_icon_scale", 0.75, 0.5, 2.0);
+		minimapIconScale = build.comment(" How large markers should appear on minimaps. (Only applicable for maps without a built-in icon scale option.)").defineInRange("minimap_icon_scale", 0.75, 0.5, 2.0);
 		verticalOffset = build.comment(" How high above villagers markers should appear.  The default position (0) is right above name plates.").defineInRange("vertical_offset", 0, -128, 128);
 		markerType = build.comment(" The types of markers to show above villagers.  Can be one of either \"items\", \"jobs\", \"generic\", or \"custom\".  These options mean:\n" +
 								   "    \"items\" - Shows items from the associated item list below.\n" +
@@ -137,7 +137,7 @@ public class MerchantMarkersConfig
 	 */
 	public boolean showLevels()
 	{
-		return OverlayType.LEVEL.equals(OverlayType.fromValue(INSTANCE.overlayIndex.get()).orElse(null));
+		return OverlayType.LEVEL.equals(OverlayType.fromValue(overlayIndex.get()).orElse(null));
 	}
 
 	public ResourceLocation getAssociatedItem(String profession)
@@ -184,18 +184,21 @@ public class MerchantMarkersConfig
 	{
 		if (config.getModId().equals(Loader.MODID))
 		{
-			Loader.LOGGER.info("Merchant Markers config reloaded.");
 			Markers.clearResourceCache();
-			if (FabricLoader.getInstance().isModLoaded("xaerominimap"))
+			try
 			{
-				try
+				if (FabricLoader.getInstance().isModLoaded("xaerominimap"))
 				{
-					Class.forName("com.anthonyhilyard.merchantmarkers.XaeroHandler").getMethod("clearIconCache").invoke(null);
+					Class.forName("com.anthonyhilyard.merchantmarkers.compat.XaeroMinimapHandler").getMethod("clearIconCache").invoke(null);
 				}
-				catch (Exception e)
+				if (FabricLoader.getInstance().isModLoaded("ftbchunks"))
 				{
-					Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
+					Class.forName("com.anthonyhilyard.merchantmarkers.compat.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
 				}
+			}
+			catch (Exception e)
+			{
+				Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
 			}
 		}
 	}

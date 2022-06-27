@@ -1,4 +1,4 @@
-package com.anthonyhilyard.merchantmarkers;
+package com.anthonyhilyard.merchantmarkers.compat;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -6,17 +6,23 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 
 import com.anthonyhilyard.iceberg.util.DynamicResourcePack;
+import com.anthonyhilyard.merchantmarkers.Loader;
+import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig.OverlayType;
 import com.anthonyhilyard.merchantmarkers.render.Markers;
 import com.anthonyhilyard.merchantmarkers.render.Markers.MarkerResource;
 import com.google.gson.JsonObject;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -26,14 +32,15 @@ import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
-import net.minecraft.server.packs.resources.SimpleReloadableResourceManager;
+import net.minecraft.server.packs.resources.MultiPackResourceManager;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
 
 import xaero.common.minimap.render.radar.EntityIconDefinitions;
 import xaero.minimap.XaeroMinimap;
 
-public class XaeroHandler implements ResourceManagerReloadListener
+public class XaeroMinimapHandler implements ResourceManagerReloadListener
 {
-	private static XaeroHandler INSTANCE = new XaeroHandler();
+	private static XaeroMinimapHandler INSTANCE = new XaeroMinimapHandler();
 	private static Map<MarkerResource, byte[]> iconCache = new HashMap<>();
 	private static BufferedImage iconOverlayImage = null;
 	private static BufferedImage numberOverlayImage = null;
@@ -76,7 +83,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 		MarkerResource resource = resourceSupplier.get();
 		if (resource == null)
 		{
-			return InputStream.nullInputStream();
+			return Markers.getEmptyInputStream();
 		}
 
 		if (iconCache.containsKey(resource))
@@ -96,7 +103,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 		// Maybe it's just not loaded yet?  Bail for now.
 		if (!manager.hasResource(resource.texture()) && Minecraft.getInstance().getTextureManager().getTexture(resource.texture(), null) == null)
 		{
-			return InputStream.nullInputStream();
+			return Markers.getEmptyInputStream();
 		}
 
 		try
@@ -142,11 +149,11 @@ public class XaeroHandler implements ResourceManagerReloadListener
 		}
 		catch (Exception e)
 		{ 
-			Loader.LOGGER.error(e.toString());
+			Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
 
 		iconCache.put(resource, new byte[0]);
-		return InputStream.nullInputStream();
+		return Markers.getEmptyInputStream();
 	}
 
 	@SuppressWarnings("resource")
@@ -155,9 +162,8 @@ public class XaeroHandler implements ResourceManagerReloadListener
 		final Minecraft minecraft = Minecraft.getInstance();
 		ResourceManager manager = minecraft.getResourceManager();
 
-		if (manager instanceof SimpleReloadableResourceManager)
+		if (manager instanceof ReloadableResourceManager reloadableManager)
 		{
-			SimpleReloadableResourceManager reloadableManager = (SimpleReloadableResourceManager)manager;
 			Supplier<Collection<ResourceLocation>> delayedResources = () -> reloadableManager.listResources("textures/entity/villager/markers", s -> s.endsWith(".png"));
 
 			if (!reloadableManager.listeners.contains(INSTANCE))
@@ -197,7 +203,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 					}
 
 					JsonObject result = new JsonObject();
-					result.addProperty("variantIdBuilderMethod", "com.anthonyhilyard.merchantmarkers.XaeroHandler.buildVariantIdString");
+					result.addProperty("variantIdBuilderMethod", "com.anthonyhilyard.merchantmarkers.compat.XaeroMinimapHandler.buildVariantIdString");
 					result.add("variants", variants);
 
 					return new ByteArrayInputStream(result.toString().getBytes());
@@ -221,6 +227,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 
 						// Register a proxy resource to display our chosen icon.
 						dynamicPack.registerResource(PackType.CLIENT_RESOURCES, markerLocation, () -> {
+
 							try
 							{
 								InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(minecraft, iconName, level));
@@ -235,7 +242,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 							}
 							catch (Exception e)
 							{
-								return InputStream.nullInputStream();
+								return Markers.getEmptyInputStream();
 							}
 						});
 					}
@@ -261,7 +268,16 @@ public class XaeroHandler implements ResourceManagerReloadListener
 			// Add the resource pack if it hasn't been added already.
 			if (!reloadableManager.listPacks().anyMatch(pack -> pack.equals(dynamicPack)))
 			{
-				reloadableManager.add(dynamicPack);
+				if (reloadableManager.resources instanceof MultiPackResourceManager resourceManager)
+				{
+					try
+					{
+						reloadableManager.resources.close();
+					}
+					catch (ConcurrentModificationException e) { /* Oops. */ }
+
+					reloadableManager.resources = new MultiPackResourceManager(reloadableManager.type, Stream.concat(resourceManager.listPacks(), Stream.of(dynamicPack)).toList());
+				}
 			}
 		}
 	}
@@ -269,10 +285,7 @@ public class XaeroHandler implements ResourceManagerReloadListener
 	@Override
 	public void onResourceManagerReload(ResourceManager resourceManager)
 	{
-		if (resourceManager instanceof SimpleReloadableResourceManager)
-		{
-			Markers.clearResourceCache();
-			clearIconCache();
-		}
+		Markers.clearResourceCache();
+		clearIconCache();
 	}
 }

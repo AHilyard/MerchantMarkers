@@ -1,4 +1,4 @@
-package com.anthonyhilyard.merchantmarkers;
+package com.anthonyhilyard.merchantmarkers.compat;
 
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
@@ -6,31 +6,39 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 
 import com.anthonyhilyard.iceberg.util.DynamicResourcePack;
+import com.anthonyhilyard.merchantmarkers.Loader;
+import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig.OverlayType;
 import com.anthonyhilyard.merchantmarkers.render.Markers;
 import com.anthonyhilyard.merchantmarkers.render.Markers.MarkerResource;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.MultiPackResourceManager;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.resources.SimpleReloadableResourceManager;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.npc.AbstractVillager;
 
-public class FTBChunksHandler
+public class FTBChunksHandler implements ResourceManagerReloadListener
 {
+	private static FTBChunksHandler INSTANCE = new FTBChunksHandler();
 	private static DynamicResourcePack dynamicPack = new DynamicResourcePack("dynamicicons");
 	private static Entity currentEntity = null;
 	private static Map<MarkerResource, byte[]> iconCache = new HashMap<>();
@@ -75,7 +83,7 @@ public class FTBChunksHandler
 		MarkerResource resource = resourceSupplier.get();
 		if (resource == null)
 		{
-			return InputStream.nullInputStream();
+			return Markers.getEmptyInputStream();
 		}
 
 		if (iconCache.containsKey(resource))
@@ -95,7 +103,7 @@ public class FTBChunksHandler
 		// Maybe it's just not loaded yet?  Bail for now.
 		if (!manager.hasResource(resource.texture()) && Minecraft.getInstance().getTextureManager().getTexture(resource.texture()) == null)
 		{
-			return InputStream.nullInputStream();
+			return Markers.getEmptyInputStream();
 		}
 
 		try
@@ -151,11 +159,11 @@ public class FTBChunksHandler
 		}
 		catch (Exception e)
 		{
-			Loader.LOGGER.error(e.toString());
+			Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
 		}
 
 		iconCache.put(resource, new byte[0]);
-		return InputStream.nullInputStream();
+		return Markers.getEmptyInputStream();
 	}
 
 	@SuppressWarnings("resource")
@@ -164,8 +172,13 @@ public class FTBChunksHandler
 		final Minecraft minecraft = Minecraft.getInstance();
 		ResourceManager manager = minecraft.getResourceManager();
 
-		if (manager instanceof SimpleReloadableResourceManager reloadableManager)
+		if (manager instanceof ReloadableResourceManager reloadableManager)
 		{
+			if (!reloadableManager.listeners.contains(INSTANCE))
+			{
+				reloadableManager.listeners.add(0, INSTANCE);
+			}
+
 			// If we haven't grabbed the default villager texture yet, do so now.
 			if (defaultVillagerResource == null)
 			{
@@ -176,7 +189,7 @@ public class FTBChunksHandler
 						// Return the first non-dynamic villager texture.
 						if (!resource.getSourceName().contentEquals("dynamicicons"))
 						{
-							byte[] defaultVillagerBytes = IOUtils.toByteArray(resource.getInputStream());
+							final byte[] defaultVillagerBytes = IOUtils.toByteArray(resource.getInputStream());
 							defaultVillagerResource = () -> {
 								return new ByteArrayInputStream(defaultVillagerBytes); 
 							};
@@ -194,7 +207,7 @@ public class FTBChunksHandler
 
 				if (currentEntity == null || (currentEntity instanceof AbstractVillager villager && villager.isBaby()))
 				{
-					return InputStream.nullInputStream();
+					return Markers.getEmptyInputStream();
 				}
 
 				try
@@ -205,22 +218,51 @@ public class FTBChunksHandler
 					// Return the default texture for blacklisted professions.
 					if (MerchantMarkersConfig.INSTANCE.professionBlacklist.get().contains(profession))
 					{
-						return defaultVillagerResource == null ? InputStream.nullInputStream() : defaultVillagerResource.get();
+						return defaultVillagerResource == null ? Markers.getEmptyInputStream() : defaultVillagerResource.get();
 					}
 
-					return getResizedIcon(() -> Markers.getMarkerResource(minecraft, profession, level));
+					InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(minecraft, profession, level));
+
+					// Stupid workaround, I know.  For some reason the proxy stream is sometimes not ready when it is returned,
+					// must be some sort of threaded timing issue?  In any case, this works.
+					Thread.sleep(1);
+
+					if (proxyStream.available() == 0)
+					{
+						return reloadableManager.getResource(Markers.getMarkerResource(minecraft, profession, level).texture()).getInputStream();
+					}
+					else
+					{
+						return proxyStream;
+					}
 				}
 				catch (Exception e)
 				{
-					return InputStream.nullInputStream();
+					return Markers.getEmptyInputStream();
 				}
 			});
 
 			// Add the resource pack if it hasn't been added already.
 			if (!reloadableManager.listPacks().anyMatch(pack -> pack.equals(dynamicPack)))
 			{
-				reloadableManager.add(dynamicPack);
+				if (reloadableManager.resources instanceof MultiPackResourceManager resourceManager)
+				{
+					try
+					{
+						reloadableManager.resources.close();
+					}
+					catch (ConcurrentModificationException e) { /* Oops. */ }
+
+					reloadableManager.resources = new MultiPackResourceManager(reloadableManager.type, Stream.concat(resourceManager.listPacks(), Stream.of(dynamicPack)).toList());
+				}
 			}
 		}
+	}
+
+	@Override
+	public void onResourceManagerReload(ResourceManager resourceManager)
+	{
+		Markers.clearResourceCache();
+		clearIconCache();
 	}
 }

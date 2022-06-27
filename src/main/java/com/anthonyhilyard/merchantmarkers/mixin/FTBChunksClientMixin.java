@@ -1,7 +1,7 @@
 package com.anthonyhilyard.merchantmarkers.mixin;
 
-import com.anthonyhilyard.merchantmarkers.FTBChunksHandler;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
+import com.anthonyhilyard.merchantmarkers.compat.FTBChunksHandler;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,11 +23,13 @@ import net.minecraft.resources.ResourceLocation;
 @Mixin(FTBChunksClient.class)
 public class FTBChunksClientMixin
 {
+	private final static ResourceLocation VILLAGER_LOCATION = new ResourceLocation("villager");
+
 	@Redirect(method = "mapIcons", at = @At(value = "INVOKE", target = "Ldev/ftb/mods/ftbchunks/client/EntityIcons;get(Lnet/minecraft/world/entity/Entity;)Ldev/ftb/mods/ftblibrary/icon/Icon;"))
 	public Icon redirectGet(Entity entity)
 	{
 		// If this is a villager, return the dynamic texture instead of the default one.
-		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && Registry.ENTITY_TYPE.getKey(entity.getType()).equals(new ResourceLocation("villager")))
+		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && Registry.ENTITY_TYPE.getKey(entity.getType()).equals(VILLAGER_LOCATION))
 		{
 			return Icon.getIcon(FTBChunksHandler.villagerTexture);
 		}
@@ -41,7 +43,7 @@ public class FTBChunksClientMixin
 		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get())
 		{
 			// Redirect the getCategory call to tell FTB Chunks that villagers aren't "Misc" category (so they aren't skipped).
-			if (Registry.ENTITY_TYPE.getKey(entityType).equals(new ResourceLocation("villager")))
+			if (Registry.ENTITY_TYPE.getKey(entityType).equals(VILLAGER_LOCATION))
 			{
 				return MobCategory.CREATURE;
 			}
@@ -58,7 +60,7 @@ public class FTBChunksClientMixin
 			Entity entity = entityIcon.entity;
 
 			// If this is a villager, return the dynamic texture instead of the default one.
-			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && Registry.ENTITY_TYPE.getKey(entity.getType()).equals(new ResourceLocation("villager")))
+			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && Registry.ENTITY_TYPE.getKey(entity.getType()).equals(VILLAGER_LOCATION))
 			{
 				FTBChunksHandler.setCurrentEntity(entity);
 			}

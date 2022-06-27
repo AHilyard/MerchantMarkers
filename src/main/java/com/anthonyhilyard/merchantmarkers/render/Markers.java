@@ -1,8 +1,10 @@
 package com.anthonyhilyard.merchantmarkers.render;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import com.anthonyhilyard.merchantmarkers.Loader;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
@@ -16,8 +18,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
 
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -28,6 +31,7 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.AbstractVillager;
@@ -47,8 +51,32 @@ public class Markers
 	public static final ResourceLocation ICON_OVERLAY = new ResourceLocation(Loader.MODID, "textures/entity/villager/overlay.png");
 	public static final ResourceLocation NUMBER_OVERLAY = new ResourceLocation(Loader.MODID, "textures/entity/villager/numbers.png");
 	public static final ResourceLocation DEFAULT_ICON = new ResourceLocation(Loader.MODID, "textures/entity/villager/default.png");
+	public static final ResourceLocation EMPTY_MARKER = new ResourceLocation(Loader.MODID, "textures/entity/villager/empty.png");
+
+	private static Supplier<InputStream> emptyMarkerResource = null;
 
 	private static Map<String, MarkerResource> resourceCache = new HashMap<>();
+
+	public static InputStream getEmptyInputStream()
+	{
+		if (emptyMarkerResource == null)
+		{
+			emptyMarkerResource = () -> {
+				final Minecraft mc = Minecraft.getInstance();
+				final ResourceManager manager = mc.getResourceManager();
+				try
+				{
+					return manager.getResource(Markers.EMPTY_MARKER).getInputStream();
+				}
+				catch (Exception e)
+				{
+					// Don't do anything, maybe the resource pack just isn't ready yet.
+					return InputStream.nullInputStream();
+				}
+			};
+		}
+		return emptyMarkerResource.get();
+	}
 
 	public static String getProfessionName(Entity entity)
 	{
@@ -103,7 +131,7 @@ public class Markers
 			}
 
 			double fadePercent = MerchantMarkersConfig.INSTANCE.fadePercent.get();
-			double currentAlpha = 1.0;
+			float currentAlpha = 1.0f;
 			
 			// We won't do any calculations if fadePercent is 100, since that would make a division by zero.
 			if (fadePercent < 100.0)
@@ -112,7 +140,7 @@ public class Markers
 				double startFade = ((1.0 - (fadePercent / 100.0)) * maxDistance);
 
 				// Calculate the current alpha value for this marker.
-				currentAlpha = Mth.clamp(1.0 - ((Math.sqrt(squareDistance) - startFade) / (maxDistance - startFade)), 0.0, 1.0);
+				currentAlpha = (float)Mth.clamp(1.0 - ((Math.sqrt(squareDistance) - startFade) / (maxDistance - startFade)), 0.0, 1.0);
 
 				// Multiply in the configured opacity value.
 				currentAlpha *= MerchantMarkersConfig.INSTANCE.opacity.get();
@@ -127,6 +155,7 @@ public class Markers
 			poseStack.mulPose(renderer.entityRenderDispatcher.cameraOrientation());
 			poseStack.scale(-0.025F, -0.025F, 0.025F);
 
+			final boolean depthTestEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
 			RenderSystem.enableBlend();
 			RenderSystem.defaultBlendFunc();
 
@@ -135,24 +164,32 @@ public class Markers
 			if (MerchantMarkersConfig.INSTANCE.showThroughWalls.get())
 			{
 				RenderSystem.disableDepthTest();
-				RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 0.3f * (float)currentAlpha);
+
+				renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y, 0.3f * currentAlpha);
 
 				if (showArrow)
 				{
-					renderArrow(poseStack, 0, y);
+					renderArrow(poseStack, 0, y, 0.3f * currentAlpha);
 				}
-
-				renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y);
 			}
 
 			RenderSystem.enableDepthTest();
-			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, (float)currentAlpha);
 
-			renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y);
+			renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y, currentAlpha);
 
 			if (showArrow)
 			{
-				renderArrow(poseStack, 0, y);
+				renderArrow(poseStack, 0, y, currentAlpha);
+			}
+
+			// Revert depth test to original state.
+			if (depthTestEnabled)
+			{
+				RenderSystem.enableDepthTest();
+			}
+			else
+			{
+				RenderSystem.disableDepthTest();
 			}
 
 			poseStack.popPose();
@@ -242,27 +279,26 @@ public class Markers
 		return result;
 	}
 
-	private static void renderMarker(MarkerResource resource, PoseStack poseStack, int x, int y)
+	private static void renderMarker(MarkerResource resource, PoseStack poseStack, int x, int y, float alpha)
 	{
 		float scale = (float)(double)MerchantMarkersConfig.INSTANCE.iconScale.get();
 		poseStack.pushPose();
 		poseStack.scale(scale, scale, 1.0f);
-		renderIcon(resource.texture(), poseStack, x, y);
+		renderIcon(resource.texture(), poseStack, x, y, alpha);
 		renderOverlay(resource, (dx, dy, width, height, sx, sy) -> {
 			poseStack.translate(0, 0, -1);
 			float imageSize = resource.overlay() == OverlayType.LEVEL ? 32.0f : 16.0f;
-			renderIcon(resource.overlay() == OverlayType.LEVEL ? NUMBER_OVERLAY : ICON_OVERLAY, poseStack, x + dx, y + dy, width, height, sx / imageSize, (sx + width) / imageSize, sy / imageSize, (sy + height) / imageSize);
+			renderIcon(resource.overlay() == OverlayType.LEVEL ? NUMBER_OVERLAY : ICON_OVERLAY, poseStack, x + dx, y + dy, width, height, sx / imageSize, (sx + width) / imageSize, sy / imageSize, (sy + height) / imageSize, alpha);
 		});
 		poseStack.popPose();
 	}
 
-	private static void renderArrow(PoseStack poseStack, int x, int y)
+	private static void renderArrow(PoseStack poseStack, int x, int y, float alpha)
 	{
 		float scale = (float)(double)MerchantMarkersConfig.INSTANCE.iconScale.get();
 		poseStack.pushPose();
 		poseStack.scale(scale, scale, 1.0f);
-		RenderSystem.setShaderTexture(0, MARKER_ARROW);
-		GuiComponent.blit(poseStack, x - 8, y + 8, 0, 0, 16, 8, 16, 8);
+		renderIcon(MARKER_ARROW, poseStack, x - 8, y + 8, 16, 8, 0, 1, 0, 1, alpha);
 		poseStack.popPose();
 	}
 
@@ -302,26 +338,27 @@ public class Markers
 		method.accept(8, 8, 8, 8, (resource.overlay().value() % 2) * 8, (resource.overlay().value() / 2) * 8);
 	}
 
-	private static void renderIcon(ResourceLocation icon, PoseStack poseStack, int x, int y)
+	private static void renderIcon(ResourceLocation icon, PoseStack poseStack, int x, int y, float alpha)
 	{
-		renderIcon(icon, poseStack, x, y, 16, 16, 0, 1, 0, 1);
+		renderIcon(icon, poseStack, x, y, 16, 16, 0, 1, 0, 1, alpha);
 	}
 
-	private static void renderIcon(ResourceLocation icon, PoseStack poseStack, int x, int y, int w, int h, float u0, float u1, float v0, float v1)
+	private static void renderIcon(ResourceLocation icon, PoseStack poseStack, int x, int y, int w, int h, float u0, float u1, float v0, float v1, float alpha)
 	{
 		Matrix4f matrix = poseStack.last().pose();
 
 		Minecraft.getInstance().getTextureManager().getTexture(icon).setFilter(false, false);
 		RenderSystem.setShaderTexture(0, icon);
 
-		RenderSystem.setShader(GameRenderer::getPositionTexShader);
+		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
-		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-		bufferbuilder.vertex(matrix, (float)x,			(float)(y + h),		0).uv(u0, v1).endVertex();
-		bufferbuilder.vertex(matrix, (float)(x + w),	(float)(y + h),		0).uv(u1, v1).endVertex();
-		bufferbuilder.vertex(matrix, (float)(x + w),	(float)y,			0).uv(u1, v0).endVertex();
-		bufferbuilder.vertex(matrix, (float)x,			(float)y,			0).uv(u0, v0).endVertex();
+		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+		bufferbuilder.vertex(matrix, (float)x,			(float)(y + h),		0).uv(u0, v1).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
+		bufferbuilder.vertex(matrix, (float)(x + w),	(float)(y + h),		0).uv(u1, v1).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
+		bufferbuilder.vertex(matrix, (float)(x + w),	(float)y,			0).uv(u1, v0).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
+		bufferbuilder.vertex(matrix, (float)x,			(float)y,			0).uv(u0, v0).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
 		bufferbuilder.end();
+
 		BufferUploader.end(bufferbuilder);
 	}
 }

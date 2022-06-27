@@ -14,14 +14,23 @@ sourceSets.main.resources.srcDirs += 'resources'
 repositories {
 	maven {
 		name = "CurseMaven"
-		url "https://www.cursemaven.com"
+		url = "https://www.cursemaven.com"
 	}
-}
-
-sourceSets {
-	main {
-		resources {
-			srcDir 'src/generated/resources'
+	maven {
+		name = "JourneyMap (Public)"
+		url = "https://jm.gserv.me/repository/maven-public/"
+	}
+	maven {
+		name = "Architectury"
+		url = "https://maven.architectury.dev/"
+		content { includeGroup "dev.architectury" }
+	}
+	maven {
+		name = "FTB Resources"
+		url = "https://maven.saps.dev/minecraft"
+		content {
+			includeGroup "dev.latvian.mods"
+			includeGroup "dev.ftb.mods"
 		}
 	}
 }
@@ -32,14 +41,16 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loaderVersion}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabricVersion}"
 
-	modImplementation 'curse.maven:forgeconfigapiport-547434:3562302'
+	modImplementation 'curse.maven:forgeconfigapiport-547434:3671141'
 	implementation 'com.electronwill.night-config:core:3.6.3'
 	implementation 'com.electronwill.night-config:toml:3.6.3'
 
 	modImplementation 'curse.maven:iceberg-539382:3546762'
-	modApi 'curse.maven:xaerominimap-263420:3551764'
-	modApi 'curse.maven:ftblibrary-438495:3598889'
-	modApi 'curse.maven:ftbchunks-472657:3601594'
+	modApi 'curse.maven:xaerominimap-263420:3798916'
+	//modApi 'curse.maven:ftblibrary-438495:3794622'
+	//modApi 'curse.maven:ftbchunks-472657:3787347'
+	modApi 'dev.ftb.mods:ftb-chunks-fabric:1802.3.6-build.147'
+	modApi group: 'info.journeymap', name: 'journeymap-api', version: '1.18.2-1.9-fabric-SNAPSHOT', changing: true
 }
 
 loom {
@@ -55,7 +66,6 @@ processResources {
 		expand "version": project.version
 	}
 }
-
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
