@@ -1,9 +1,15 @@
 # Changelog
 
+### 1.2.3
+- Added support for latest version of Forge.
+- Added support for Minecraft 1.19.1.
+- Added a new optional keybind to show/hide markers.
+
 ### 1.2.2
 - Improved compatibility with JourneyMap and related integrations. (Thanks MysticDrew!)
 - Improved some configuration option descriptions.
 - The "showOnMinimap" option should now work for all supported minimap mods.
+- First Forge 1.19 release.
 
 ### 1.2.1
 - Fixed a stall / crash that occurred when JourneyMap version 5.8.5 was installed.

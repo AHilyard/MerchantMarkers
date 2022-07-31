@@ -27,6 +27,7 @@ public class MerchantMarkersConfig extends IcebergConfig<MerchantMarkersConfig>
 	private static MerchantMarkersConfig INSTANCE;
 	public static MerchantMarkersConfig getInstance() { return INSTANCE; }
 
+	public final BooleanValue alwaysShow;
 	public final BooleanValue showThroughWalls;
 	public final BooleanValue showArrow;
 	public final BooleanValue showOnMiniMap;
@@ -103,6 +104,7 @@ public class MerchantMarkersConfig extends IcebergConfig<MerchantMarkersConfig>
 	{
 		build.comment("Client Configuration").push("client").push("visual_options");
 
+		alwaysShow = build.comment(" If markers above villagers should always show.  If false, they will only show when the configured keybind is held.").define("always_show", true);
 		showThroughWalls = build.comment(" If markers should be visible through walls and other obstructions.").define("show_through_walls", true);
 		showArrow = build.comment(" If markers should include an arrow under the profession-specific icon.").define("show_arrow", true);
 		showOnMiniMap = build.comment(" If icons should show on minimaps. (Currently supports Xaero's Minimap, FTB Chunks, and JourneyMap).").define("show_on_minimap", true);

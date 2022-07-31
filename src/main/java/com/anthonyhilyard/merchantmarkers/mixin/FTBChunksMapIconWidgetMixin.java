@@ -29,7 +29,7 @@ public class FTBChunksMapIconWidgetMixin
 			Entity entity = entityIcon.entity;
 
 			// If this is a villager, return the dynamic texture instead of the default one.
-			if (MerchantMarkersConfig.getInstance().showOnMiniMap.get() && ForgeRegistries.ENTITIES.getKey(entity.getType()).equals(VILLAGER_LOCATION))
+			if (MerchantMarkersConfig.getInstance().showOnMiniMap.get() && ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).equals(VILLAGER_LOCATION))
 			{
 				FTBChunksHandler.setCurrentEntity(entity);
 			}

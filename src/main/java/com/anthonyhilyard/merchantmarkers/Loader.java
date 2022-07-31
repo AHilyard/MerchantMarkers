@@ -27,6 +27,7 @@ public class Loader
 			}
 			MerchantMarkers mod = new MerchantMarkers();
 			FMLJavaModLoadingContext.get().getModEventBus().addListener(mod::onClientSetup);
+			FMLJavaModLoadingContext.get().getModEventBus().addListener(mod::onRegisterKeyMappings);
 			MinecraftForge.EVENT_BUS.register(MerchantMarkers.class);
 		}
 
