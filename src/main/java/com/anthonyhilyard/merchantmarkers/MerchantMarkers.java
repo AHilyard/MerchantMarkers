@@ -1,15 +1,23 @@
 package com.anthonyhilyard.merchantmarkers;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.lwjgl.glfw.GLFW;
+
+import com.mojang.blaze3d.platform.InputConstants;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 
 public class MerchantMarkers implements ClientModInitializer
 {
+	public static final KeyMapping showMarkers = KeyBindingHelper.registerKeyBinding(new KeyMapping("merchantmarkers.key.showMarkers",
+																InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "merchantmarkers.key.categories.merchantMarkers"));
+
 	@Override
 	public void onInitializeClient()
 	{

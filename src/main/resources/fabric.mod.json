@@ -38,7 +38,7 @@
 		"minecraft": "~1.19",
 		"java": ">=17",
 		"forgeconfigapiport": ">=4.0",
-		"iceberg": ">=1.0.38"
+		"iceberg": ">=1.0.46"
 	},
 	"suggests": {
 		"xaerominimap": ">=22.9.3",
