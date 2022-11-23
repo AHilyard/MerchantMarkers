@@ -1,5 +1,10 @@
 # Changelog
 
+### 1.2.3
+- Added support for latest version of Forge.
+- Added support for Minecraft 1.19.1.
+- Added a new optional keybind to show/hide markers.
+
 ### 1.2.2
 - Improved compatibility with JourneyMap and related integrations. (Thanks MysticDrew!)
 - Improved some configuration option descriptions.
