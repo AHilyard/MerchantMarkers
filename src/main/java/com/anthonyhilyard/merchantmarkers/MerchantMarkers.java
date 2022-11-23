@@ -4,9 +4,15 @@ import com.anthonyhilyard.merchantmarkers.compat.OptifineHandler;
 import com.anthonyhilyard.merchantmarkers.render.Markers;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.lwjgl.glfw.GLFW;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
+import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.event.RenderNameplateEvent;
+import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -16,8 +22,12 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 
 public class MerchantMarkers
 {
+	private static final KeyMapping showMarkers = new KeyMapping("merchantmarkers.key.showMarkers", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_LEFT_ALT), "merchantmarkers.key.categories.merchantMarkers");
+
 	public void onClientSetup(FMLClientSetupEvent event)
 	{
+		ClientRegistry.registerKeyBinding(showMarkers);
+
 		try
 		{
 			// If Xaero's minimap is loaded, add a resource manager listener for dynamically-sized map icons.
@@ -45,6 +55,9 @@ public class MerchantMarkers
 	@SubscribeEvent
 	public static void onRenderNameplate(RenderNameplateEvent event)
 	{
-		Markers.renderMarker(event.getEntityRenderer(), event.getEntity(), event.getContent(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight());
+		if (showMarkers.isDown() || MerchantMarkersConfig.getInstance().alwaysShow.get())
+		{
+			Markers.renderMarker(event.getEntityRenderer(), event.getEntity(), event.getContent(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight());
+		}
 	}
 }

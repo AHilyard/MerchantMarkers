@@ -55,6 +55,7 @@ public class OptifineHandler implements ResourceManagerReloadListener
 		fixRenderSettings();
 	}
 
+	@SuppressWarnings("null")
 	private static void fixRenderSettings()
 	{
 		// Don't do anything if the optifine workaround is disabled.
