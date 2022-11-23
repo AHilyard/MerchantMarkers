@@ -1,6 +1,7 @@
 buildscript {
 	repositories {
-		maven { url = 'https://files.minecraftforge.net/maven' }
+		maven { url = "https://maven.minecraftforge.net" }
+		maven { url = "https://plugins.gradle.org/m2/" }
 		maven { url = "https://repo.spongepowered.org/maven" }
 	}
 	dependencies {
@@ -27,7 +28,7 @@ minecraft {
 	runs {
 		client {
 			properties 'forge.logging.markers': ''
-			properties 'forge.logging.console.level': 'debug'
+			properties 'forge.logging.console.level': 'info'
 			properties 'terminal.ansi': 'true'
 			workingDirectory project.file('run').canonicalPath
 			source sourceSets.main
@@ -44,6 +45,10 @@ repositories {
 	maven {
 		name = "CurseMaven"
 		url "https://www.cursemaven.com"
+	}
+	maven {
+		name = "JourneyMap (Public)"
+		url = "https://jm.gserv.me/repository/maven-public/"
 	}
 }
 
@@ -63,7 +68,8 @@ dependencies {
 	compileOnly fg.deobf('curse.maven:xaerominimap-263420:3778436')
 	compileOnly fg.deobf('curse.maven:ftblibrary-404465:3598890')
 	compileOnly fg.deobf('curse.maven:ftbchunks-314906:3787348')
-	compileOnly fg.deobf('curse.maven:journeymap-32274:3621130')
+	compileOnly fg.deobf(group: 'info.journeymap', name: 'journeymap-api', version: '1.18.2-1.9-SNAPSHOT', changing: true)
+	runtimeOnly fg.deobf('curse.maven:journeymap-32274:3927228')
 }
 
 jar {
