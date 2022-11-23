@@ -26,7 +26,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
@@ -51,7 +50,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 	{
 		currentEntity = entity;
 
-		if (entity instanceof AbstractVillager villager)
+		if (Markers.shouldShowMarker(entity))
 		{
 			final Minecraft minecraft = Minecraft.getInstance();
 
@@ -202,7 +201,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 
 			dynamicPack.registerResource(PackType.CLIENT_RESOURCES, villagerTexture, () -> {
 
-				if (currentEntity == null || (currentEntity instanceof AbstractVillager villager && villager.isBaby()))
+				if (currentEntity == null || (!Markers.shouldShowMarker(currentEntity)))
 				{
 					return Markers.getEmptyInputStream();
 				}

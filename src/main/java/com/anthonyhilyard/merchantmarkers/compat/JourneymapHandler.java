@@ -13,7 +13,6 @@ import journeymap.client.api.event.ClientEvent;
 import journeymap.client.api.event.forge.EntityRadarUpdateEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -48,7 +47,7 @@ public class JourneymapHandler implements IClientPlugin
 			LivingEntity entity = event.getWrappedEntity().getEntityLivingRef().get();
 
 			// If this entity is marker-able, update the texture before drawing.
-			if (entity instanceof AbstractVillager && !(entity).isBaby())
+			if (Markers.shouldShowMarker(entity))
 			{
 				String profession = Markers.getProfessionName(entity);
 

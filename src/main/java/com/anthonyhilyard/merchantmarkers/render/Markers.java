@@ -34,12 +34,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.npc.WanderingTrader;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -81,7 +82,7 @@ public class Markers
 
 	public static String getProfessionName(Entity entity)
 	{
-		String iconName = "default";
+		String iconName = "";
 		if (entity instanceof Villager)
 		{
 			// If the profession name contains any colons, replace them with double underscores.
@@ -91,9 +92,22 @@ public class Markers
 		{
 			iconName = "wandering_trader";
 		}
+		else if (entity instanceof Merchant)
+		{
+			iconName = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).getPath();
+		}
 		else
 		{
-			iconName = entity.getClass().getName().toLowerCase();
+			iconName = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).getPath();
+
+			// Check if there is a marker with this profession name.
+			Minecraft mc = Minecraft.getInstance();
+			ResourceManager manager = mc.getResourceManager();
+			if (!manager.getResource(new ResourceLocation(Loader.MODID, "textures/entity/villager/markers/" + iconName + ".png")).isPresent())
+			{
+				// This isn't a valid profession name, so return a blank string.
+				iconName = "";
+			}
 		}
 		return iconName;
 	}
@@ -110,17 +124,11 @@ public class Markers
 
 	public static void renderMarker(EntityRenderer<?> renderer, Entity entity, Component component, PoseStack poseStack, MultiBufferSource buffer, int packedLight)
 	{
-		if (entity instanceof AbstractVillager)
+		if (Markers.shouldShowMarker(entity))
 		{
 			Minecraft mc = Minecraft.getInstance();
 			String profession = getProfessionName(entity);
 			int level = getProfessionLevel(entity);
-			
-			// Skip professions in the blacklist.
-			if (MerchantMarkersConfig.getInstance().professionBlacklist.get().contains(profession))
-			{
-				return;
-			}
 
 			double squareDistance = renderer.entityRenderDispatcher.distanceToSqr(entity);
 			double maxDistance = MerchantMarkersConfig.getInstance().maxDistance.get();
@@ -202,9 +210,28 @@ public class Markers
 		resourceCache.clear();
 	}
 
+	public static boolean shouldShowMarker(Entity entity)
+	{
+		// TODO: Cache this?
+		String professionName = getProfessionName(entity);
+		if (professionName == "" || entity.isInvisible() ||
+			(entity instanceof LivingEntity livingEntity && (livingEntity.isBaby() || livingEntity.isDeadOrDying())) ||
+			MerchantMarkersConfig.getInstance().professionBlacklist.get().contains(professionName))
+		{
+			return false;
+		}
+		
+		return true;
+	}
+
 	@SuppressWarnings("deprecation")
 	public static MarkerResource getMarkerResource(Minecraft mc, String professionName, int level)
 	{
+		if (professionName == "")
+		{
+			return null;
+		}
+
 		String resourceKey = String.format("%s-%d", professionName, level);
 
 		// Returned the cached value, if there is one.
@@ -265,7 +292,7 @@ public class Markers
 				}
 				break;
 			}
-			// Render the generic icon for everything by falling through.
+			// Render the generic icon by falling through.
 			case GENERIC:
 			break;
 		}
