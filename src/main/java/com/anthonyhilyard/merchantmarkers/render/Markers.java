@@ -16,8 +16,8 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.math.Matrix4f;
 
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
@@ -28,7 +28,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -256,7 +256,7 @@ public class Markers
 					BakedModel bakedModel = itemRenderer.getModel(new ItemStack(associatedItem), (Level)null, mc.player, 0);
 
 					TextureAtlasSprite sprite = bakedModel.getParticleIcon();
-					ResourceLocation spriteLocation = new ResourceLocation(sprite.getName().getNamespace(), String.format("textures/%s%s", sprite.getName().getPath(), ".png"));
+					ResourceLocation spriteLocation = new ResourceLocation(sprite.atlasLocation().getNamespace(), String.format("textures/%s%s", sprite.atlasLocation().getPath(), ".png"));
 					result = new MarkerResource(spriteLocation, overlayType, level);
 				}
 				break;
@@ -264,7 +264,7 @@ public class Markers
 			case JOBS:
 			{
 				// If the entity is a villager, find the (first) job block for their profession.
-				VillagerProfession profession = Registry.VILLAGER_PROFESSION.get(new ResourceLocation(professionName.replace("__", ":")));
+				VillagerProfession profession = BuiltInRegistries.VILLAGER_PROFESSION.get(new ResourceLocation(professionName.replace("__", ":")));
 				if (profession != VillagerProfession.NONE)
 				{
 					List<BlockState> jobBlockStates = ForgeRegistries.POI_TYPES.getValues().stream().filter((poiType) -> profession.acquirableJobSite().test(ForgeRegistries.POI_TYPES.getHolder(poiType).get())).<BlockState>flatMap(poiType -> poiType.matchingStates().stream()).distinct().toList();
@@ -275,7 +275,7 @@ public class Markers
 						BakedModel bakedModel = blockRenderer.getBlockModel(jobBlockStates.iterator().next());
 
 						TextureAtlasSprite sprite = bakedModel.getParticleIcon();
-						ResourceLocation spriteLocation = new ResourceLocation(sprite.getName().getNamespace(), String.format("textures/%s%s", sprite.getName().getPath(), ".png"));
+						ResourceLocation spriteLocation = new ResourceLocation(sprite.atlasLocation().getNamespace(), String.format("textures/%s%s", sprite.atlasLocation().getPath(), ".png"));
 						result = new MarkerResource(spriteLocation, overlayType, level);
 					}
 				}
