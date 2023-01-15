@@ -45,7 +45,7 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loaderVersion}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabricVersion}"
 
-	modImplementation "net.minecraftforge:forgeconfigapiport-fabric:${forgeConfigApiVersion}"
+	modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forgeConfigApiVersion}"
 	modImplementation 'curse.maven:iceberg-539382:3832794'
 	modApi 'curse.maven:xaerominimap-263420:3835774'
 	modApi 'dev.ftb.mods:ftb-chunks-fabric:1900.3.7-build.154'

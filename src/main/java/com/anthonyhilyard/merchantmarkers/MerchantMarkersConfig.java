@@ -12,6 +12,8 @@ import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.Lists;
 
+import fuzs.forgeconfigapiport.api.config.v2.ModConfigEvents;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -23,7 +25,6 @@ import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.common.ForgeConfigSpec.DoubleValue;
 import net.minecraftforge.common.ForgeConfigSpec.IntValue;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.api.fml.event.config.ModConfigEvent;
 
 public class MerchantMarkersConfig
 {
@@ -131,7 +132,7 @@ public class MerchantMarkersConfig
 
 		build.pop().pop();
 
-		ModConfigEvent.RELOADING.register(MerchantMarkersConfig::onLoad);
+		ModConfigEvents.reloading(Loader.MODID).register(MerchantMarkersConfig::onLoad);
 	}
 
 	/**

@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
-import net.minecraftforge.api.ModLoadingContext;
+import fuzs.forgeconfigapiport.api.config.v2.ForgeConfigRegistry;
 import net.minecraftforge.fml.config.ModConfig;
 
 public class MerchantMarkers implements ClientModInitializer
@@ -21,7 +21,7 @@ public class MerchantMarkers implements ClientModInitializer
 	@Override
 	public void onInitializeClient()
 	{
-		ModLoadingContext.registerConfig(Loader.MODID, ModConfig.Type.COMMON, MerchantMarkersConfig.SPEC);
+		ForgeConfigRegistry.INSTANCE.register(Loader.MODID, ModConfig.Type.COMMON, MerchantMarkersConfig.SPEC);
 
 		ClientLifecycleEvents.CLIENT_STARTED.register((client) ->
 		{

@@ -34,7 +34,6 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.npc.AbstractVillager;
 
 public class FTBChunksHandler implements ResourceManagerReloadListener
 {
@@ -52,7 +51,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 	{
 		currentEntity = entity;
 
-		if (entity instanceof AbstractVillager villager)
+		if (Markers.shouldShowMarker(entity))
 		{
 			final Minecraft minecraft = Minecraft.getInstance();
 			final TextureManager textureManager = minecraft.getTextureManager();
@@ -205,7 +204,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 
 			dynamicPack.registerResource(PackType.CLIENT_RESOURCES, villagerTexture, () -> {
 
-				if (currentEntity == null || (currentEntity instanceof AbstractVillager villager && villager.isBaby()))
+				if (currentEntity == null || !Markers.shouldShowMarker(currentEntity))
 				{
 					return Markers.getEmptyInputStream();
 				}

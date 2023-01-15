@@ -17,7 +17,7 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 
 @Mixin(FTBChunksClient.class)
@@ -29,7 +29,7 @@ public class FTBChunksClientMixin
 	public Icon redirectGet(Entity entity)
 	{
 		// If this is a villager, return the dynamic texture instead of the default one.
-		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && Registry.ENTITY_TYPE.getKey(entity.getType()).equals(VILLAGER_LOCATION))
+		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).equals(VILLAGER_LOCATION))
 		{
 			return Icon.getIcon(FTBChunksHandler.villagerTexture);
 		}
@@ -43,7 +43,7 @@ public class FTBChunksClientMixin
 		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get())
 		{
 			// Redirect the getCategory call to tell FTB Chunks that villagers aren't "Misc" category (so they aren't skipped).
-			if (Registry.ENTITY_TYPE.getKey(entityType).equals(VILLAGER_LOCATION))
+			if (BuiltInRegistries.ENTITY_TYPE.getKey(entityType).equals(VILLAGER_LOCATION))
 			{
 				return MobCategory.CREATURE;
 			}
@@ -60,7 +60,7 @@ public class FTBChunksClientMixin
 			Entity entity = entityIcon.entity;
 
 			// If this is a villager, return the dynamic texture instead of the default one.
-			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && Registry.ENTITY_TYPE.getKey(entity.getType()).equals(VILLAGER_LOCATION))
+			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).equals(VILLAGER_LOCATION))
 			{
 				FTBChunksHandler.setCurrentEntity(entity);
 			}

@@ -13,7 +13,7 @@ import dev.ftb.mods.ftbchunks.client.MapIconWidget;
 import dev.ftb.mods.ftbchunks.client.MapType;
 import dev.ftb.mods.ftbchunks.integration.MapIcon;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 
 @Mixin(MapIconWidget.class)
@@ -29,7 +29,7 @@ public class FTBChunksMapIconWidgetMixin
 			Entity entity = entityIcon.entity;
 
 			// If this is a villager, return the dynamic texture instead of the default one.
-			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && Registry.ENTITY_TYPE.getKey(entity.getType()).equals(VILLAGER_LOCATION))
+			if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get() && BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).equals(VILLAGER_LOCATION))
 			{
 				FTBChunksHandler.setCurrentEntity(entity);
 			}
