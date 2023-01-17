@@ -1,0 +1,5 @@
+{
+	"merchantmarkers.general.optifine_workaround_warning": "Optifine ломает Merchant Markers при использовании шейдеров без быстрой отрисовки. Merchant Markers включил параметр Быстрая отрисовка.",
+	"merchantmarkers.key.showMarkers": "Показывать индикаторы крестьянина",
+	"merchantmarkers.key.categories.merchantMarkers": "Merchant Markers"
+}
