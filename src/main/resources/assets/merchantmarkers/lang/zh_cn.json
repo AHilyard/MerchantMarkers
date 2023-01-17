@@ -1,0 +1,5 @@
+{
+	"merchantmarkers.general.optifine_workaround_warning": "在没有快速渲染的情况下使用光影时，Optifine会破坏商人标记。商人标记启用了快速渲染选项。",
+	"merchantmarkers.key.showMarkers": "显示商人标记",
+	"merchantmarkers.key.categories.merchantMarkers": "商人标记"
+}
