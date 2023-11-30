@@ -56,10 +56,10 @@ dependencies {
 	annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
 	implementation fg.deobf('curse.maven:iceberg-520110:4744147')
-	compileOnly fg.deobf('curse.maven:xaerominimap-263420:4730941')
-	compileOnly fg.deobf('curse.maven:ftblibrary-404465:4720056')
-	compileOnly fg.deobf('curse.maven:ftbchunks-314906:4753076')
-	compileOnly fg.deobf(group: 'info.journeymap', name: 'journeymap-api', version: '1.20-1.9-SNAPSHOT', changing: true)
+	compileOnly fg.deobf('curse.maven:xaerominimap-263420:4911819')
+	compileOnly fg.deobf('curse.maven:ftblibrary-404465:4864329')
+	compileOnly fg.deobf('curse.maven:ftbchunks-314906:4828652')
+	compileOnly fg.deobf(group: 'info.journeymap', name: 'journeymap-api', version: '1.20.2-1.9-SNAPSHOT', changing: true)
 }
 
 jar {
