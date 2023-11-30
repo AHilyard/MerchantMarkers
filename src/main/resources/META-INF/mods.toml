@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[41,)"
+loaderVersion="[46,)"
 license="CC BY-NC-ND 4.0"
 
 [[mods]]
@@ -15,41 +15,41 @@ description='''Adds floating markers above villagers to indicate their professio
 [[dependencies.merchantmarkers]]
 	modId="forge"
 	mandatory=true
-	versionRange="[41,)"
+	versionRange="[46,)"
 	ordering="NONE"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
 	modId="minecraft"
 	mandatory=true
-	versionRange="[1.19,)"
+	versionRange="[1.20,)"
 	ordering="NONE"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
 	modId="iceberg"
 	mandatory=true
-	versionRange="[1.0.46,)"
+	versionRange="[1.1.15,)"
 	ordering="NONE"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
 	modId="xaerominimap"
 	mandatory=false
-	versionRange="[22.9.3,)"
+	versionRange="[23.7.0,)"
 	ordering="BEFORE"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
 	modId="ftbchunks"
 	mandatory=false
-	versionRange="[1900.3.7,)"
+	versionRange="[2001.2.1,)"
 	ordering="BEFORE"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
 	modId="journeymap"
 	mandatory=false
-	versionRange="[5.8.5rc2,)"
+	versionRange="[5.9.12,)"
 	ordering="BEFORE"
 	side="BOTH"

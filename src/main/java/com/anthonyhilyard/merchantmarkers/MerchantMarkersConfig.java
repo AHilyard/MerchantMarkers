@@ -20,7 +20,6 @@ import net.minecraftforge.common.ForgeConfigSpec.BooleanValue;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.common.ForgeConfigSpec.DoubleValue;
 import net.minecraftforge.common.ForgeConfigSpec.IntValue;
-import net.minecraftforge.fml.ModList;
 
 public class MerchantMarkersConfig extends IcebergConfig<MerchantMarkersConfig>
 {
@@ -164,14 +163,14 @@ public class MerchantMarkersConfig extends IcebergConfig<MerchantMarkersConfig>
 		Markers.clearResourceCache();
 		try
 		{
-			if (ModList.get().isLoaded("xaerominimap"))
-			{
-				Class.forName("com.anthonyhilyard.merchantmarkers.compat.XaeroMinimapHandler").getMethod("clearIconCache").invoke(null);
-			}
-			if (ModList.get().isLoaded("ftbchunks"))
-			{
-				Class.forName("com.anthonyhilyard.merchantmarkers.compat.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
-			}
+			// if (ModList.get().isLoaded("xaerominimap"))
+			// {
+			// 	Class.forName("com.anthonyhilyard.merchantmarkers.compat.XaeroMinimapHandler").getMethod("clearIconCache").invoke(null);
+			// }
+			// if (ModList.get().isLoaded("ftbchunks"))
+			// {
+			// 	Class.forName("com.anthonyhilyard.merchantmarkers.compat.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
+			// }
 		}
 		catch (Exception e)
 		{
