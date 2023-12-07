@@ -37,6 +37,13 @@ repositories {
 			includeGroup "dev.ftb.mods"
 		}
 	}
+	maven {
+		name = "KubeJS Resources"
+		url = "https://maven.blamejared.com"
+		content {
+			includeGroup "com.faux.ingredientextension"
+		}
+	}
 }
 
 dependencies {
@@ -45,11 +52,11 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loaderVersion}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabricVersion}"
 
-	modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forgeConfigApiVersion}"
-	modImplementation 'curse.maven:iceberg-539382:3832794'
-	modApi 'curse.maven:xaerominimap-263420:3835774'
-	modApi 'dev.ftb.mods:ftb-chunks-fabric:1900.3.7-build.154'
-	modApi group: 'info.journeymap', name: 'journeymap-api', version: '1.19-1.8-fabric-SNAPSHOT', changing: true
+	modImplementation 'curse.maven:iceberg-539382:4706535'
+	modApi "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forgeConfigApiVersion}"
+	modApi 'curse.maven:xaerominimap-263420:4730963'
+	modApi 'dev.ftb.mods:ftb-chunks-fabric:2001.2.1'
+	modApi group: 'info.journeymap', name: 'journeymap-api', version: '1.20-1.9-fabric-SNAPSHOT', changing: true
 }
 
 loom {
@@ -67,10 +74,6 @@ processResources {
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
 	it.options.release = 17
-}
-
-java {
-	withSourcesJar()
 }
 
 jar {

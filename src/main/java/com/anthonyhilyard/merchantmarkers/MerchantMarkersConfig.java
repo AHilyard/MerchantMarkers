@@ -12,13 +12,12 @@ import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.google.common.collect.Lists;
 
-import fuzs.forgeconfigapiport.api.config.v2.ModConfigEvents;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
+import fuzs.forgeconfigapiport.api.config.v2.ModConfigEvents;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.BooleanValue;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
@@ -194,10 +193,10 @@ public class MerchantMarkersConfig
 				{
 					Class.forName("com.anthonyhilyard.merchantmarkers.compat.XaeroMinimapHandler").getMethod("clearIconCache").invoke(null);
 				}
-				if (FabricLoader.getInstance().isModLoaded("ftbchunks"))
-				{
-					Class.forName("com.anthonyhilyard.merchantmarkers.compat.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
-				}
+				// if (FabricLoader.getInstance().isModLoaded("ftbchunks"))
+				// {
+				// 	Class.forName("com.anthonyhilyard.merchantmarkers.compat.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
+				// }
 			}
 			catch (Exception e)
 			{

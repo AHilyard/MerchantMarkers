@@ -6,6 +6,10 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.reflect.Field;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +24,8 @@ import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig.OverlayType;
 import com.anthonyhilyard.merchantmarkers.render.Markers;
 import com.anthonyhilyard.merchantmarkers.render.Markers.MarkerResource;
+
+import dev.ftb.mods.ftbchunks.client.mapicon.EntityMapIcon;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -46,6 +52,29 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 
 	public static final ResourceLocation villagerTexture = new ResourceLocation("ftbchunks", "textures/faces/minecraft/villager.png");
 	private static Supplier<InputStream> defaultVillagerResource = null;
+
+	private static MethodHandle getEntity = null;
+
+	public static Entity getEntityFromIcon(EntityMapIcon icon)
+	{
+		try
+		{
+			if (getEntity == null)
+			{
+				Lookup lookup = MethodHandles.lookup();
+				Field entityField = EntityMapIcon.class.getDeclaredField("entity");
+				entityField.setAccessible(true);
+
+				getEntity = lookup.unreflectGetter(entityField);
+			}
+
+			return (Entity) getEntity.invoke(icon);
+		}
+		catch (Throwable e)
+		{
+			return null;
+		}
+	}
 
 	public static void setCurrentEntity(Entity entity)
 	{
@@ -199,6 +228,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 				catch (Exception e)
 				{
 					// Don't do anything, maybe the resource pack just isn't ready yet.
+					Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
 				}
 			}
 
@@ -237,6 +267,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 				}
 				catch (Exception e)
 				{
+					Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
 					return Markers.getEmptyInputStream();
 				}
 			});
@@ -250,7 +281,11 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 					{
 						reloadableManager.resources.close();
 					}
-					catch (ConcurrentModificationException e) { /* Oops. */ }
+					catch (ConcurrentModificationException e)
+					{
+						 /* Oops. */ 
+						Loader.LOGGER.error(ExceptionUtils.getStackTrace(e));
+					}
 
 					reloadableManager.resources = new MultiPackResourceManager(reloadableManager.type, Stream.concat(resourceManager.listPacks(), Stream.of(dynamicPack)).toList());
 				}
