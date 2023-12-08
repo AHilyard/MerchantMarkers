@@ -34,6 +34,7 @@ public class JourneymapHandler implements IClientPlugin
 	@Override
 	public void onEvent(ClientEvent clientEvent) { }
 
+	@SuppressWarnings("deprecation")
 	public void onEntityUpdate(EntityRadarUpdateEvent event)
 	{
 		// If we are showing custom icons on the minimap, replace the standard JourneyMap icons now.

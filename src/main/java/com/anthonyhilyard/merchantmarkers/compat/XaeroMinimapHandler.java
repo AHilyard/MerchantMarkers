@@ -46,6 +46,7 @@ public class XaeroMinimapHandler implements ResourceManagerReloadListener
 	private static BufferedImage numberOverlayImage = null;
 	private static DynamicResourcePack dynamicPack = new DynamicResourcePack("dynamicicons");
 
+	@SuppressWarnings("deprecation")
 	public static void buildVariantIdString(final StringBuilder stringBuilder, final EntityRenderer<?> entityRenderer, final Entity entity)
 	{
 		// If the profession blacklist contains this profession, run the default functionality.
@@ -78,6 +79,7 @@ public class XaeroMinimapHandler implements ResourceManagerReloadListener
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	private static InputStream getResizedIcon(Supplier<MarkerResource> resourceSupplier)
 	{
 		MarkerResource resource = resourceSupplier.get();
@@ -156,7 +158,7 @@ public class XaeroMinimapHandler implements ResourceManagerReloadListener
 		return Markers.getEmptyInputStream();
 	}
 
-	@SuppressWarnings("resource")
+	@SuppressWarnings({"resource", "deprecation"})
 	public static void setupDynamicIcons()
 	{
 		final Minecraft minecraft = Minecraft.getInstance();

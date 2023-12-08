@@ -106,6 +106,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 		setupDynamicIcons();
 	}
 
+	@SuppressWarnings("deprecation")
 	private static InputStream getResizedIcon(Supplier<MarkerResource> resourceSupplier)
 	{
 		MarkerResource resource = resourceSupplier.get();
@@ -194,7 +195,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 		return Markers.getEmptyInputStream();
 	}
 
-	@SuppressWarnings("resource")
+	@SuppressWarnings({"resource", "deprecation"})
 	public static void setupDynamicIcons()
 	{
 		final Minecraft minecraft = Minecraft.getInstance();

@@ -17,7 +17,7 @@ import net.minecraft.world.entity.Entity;
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin<T extends Entity>
 {
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "deprecation"})
 	@Inject(method = "render", at = @At(value  = "HEAD"))
 	public void render(T entity, float f, float g, PoseStack poseStack, MultiBufferSource buffer, int packedLight, CallbackInfo info)
 	{

@@ -27,6 +27,7 @@ public class FTBChunksClientMixin
 {
 	private final static ResourceLocation VILLAGER_LOCATION = new ResourceLocation("villager");
 
+	@SuppressWarnings("deprecation")
 	@Redirect(method = "mapIcons", at = @At(value = "INVOKE", target = "Ldev/ftb/mods/ftbchunks/client/mapicon/EntityIcons;get(Lnet/minecraft/world/entity/Entity;)Ldev/ftb/mods/ftblibrary/icon/Icon;"), require = 0)
 	public Icon redirectGet(Entity entity)
 	{
@@ -39,6 +40,7 @@ public class FTBChunksClientMixin
 		return EntityIcons.get(entity);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Redirect(method = "mapIcons", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;getCategory()Lnet/minecraft/world/entity/MobCategory;"), require = 0)
 	public MobCategory redirectGetCategory(EntityType<?> entityType)
 	{
@@ -54,6 +56,7 @@ public class FTBChunksClientMixin
 		return entityType.getCategory();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Redirect(method = "renderHud", at = @At(value = "INVOKE", target = "Ldev/ftb/mods/ftbchunks/api/client/icon/MapIcon;draw(Ldev/ftb/mods/ftbchunks/api/client/icon/MapType;Lnet/minecraft/client/gui/GuiGraphics;IIIIZI)V"), require = 0)
 	public void redirectIconDraw(MapIcon icon, MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha)
 	{

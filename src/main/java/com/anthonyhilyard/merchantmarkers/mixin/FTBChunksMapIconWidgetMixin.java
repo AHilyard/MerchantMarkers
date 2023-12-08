@@ -19,6 +19,7 @@ import net.minecraft.world.entity.Entity;
 @Mixin(MapIconWidget.class)
 public class FTBChunksMapIconWidgetMixin
 {
+	@SuppressWarnings("deprecation")
 	@Redirect(method = "draw", at = @At(value = "INVOKE", target = "Ldev/ftb/mods/ftbchunks/api/client/icon/MapIcon;draw(Ldev/ftb/mods/ftbchunks/api/client/icon/MapType;Lnet/minecraft/client/gui/GuiGraphics;IIIIZI)V", remap = false), remap = false, require = 0)
 	public void redirectIconDraw(MapIcon icon, MapType mapType, GuiGraphics graphics, int x, int y, int w, int h, boolean outsideVisibleArea, int iconAlpha)
 	{

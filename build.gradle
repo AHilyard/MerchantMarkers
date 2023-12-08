@@ -54,9 +54,9 @@ dependencies {
 
 	modImplementation 'curse.maven:iceberg-539382:4706535'
 	modApi "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forgeConfigApiVersion}"
-	modApi 'curse.maven:xaerominimap-263420:4730963'
-	modApi 'dev.ftb.mods:ftb-chunks-fabric:2001.2.1'
-	modApi group: 'info.journeymap', name: 'journeymap-api', version: '1.20-1.9-fabric-SNAPSHOT', changing: true
+	modApi 'curse.maven:xaerominimap-263420:4933803'
+	modApi 'dev.ftb.mods:ftb-chunks-fabric:2001.2.4'
+	modApi group: 'info.journeymap', name: 'journeymap-api', version: '1.20.2-1.9-fabric-SNAPSHOT', changing: true
 }
 
 loom {

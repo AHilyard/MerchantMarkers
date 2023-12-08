@@ -44,6 +44,7 @@ import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
+@SuppressWarnings("deprecation")
 public class Markers
 {
 	public static record MarkerResource(ResourceLocation texture, OverlayType overlay, int level) {}

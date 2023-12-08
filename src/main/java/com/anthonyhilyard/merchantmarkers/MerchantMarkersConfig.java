@@ -25,6 +25,7 @@ import net.minecraftforge.common.ForgeConfigSpec.DoubleValue;
 import net.minecraftforge.common.ForgeConfigSpec.IntValue;
 import net.minecraftforge.fml.config.ModConfig;
 
+@SuppressWarnings("deprecation")
 public class MerchantMarkersConfig
 {
 	public static final ForgeConfigSpec SPEC;

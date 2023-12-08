@@ -13,6 +13,7 @@ import net.minecraft.client.KeyMapping;
 import fuzs.forgeconfigapiport.api.config.v2.ForgeConfigRegistry;
 import net.minecraftforge.fml.config.ModConfig;
 
+@SuppressWarnings("deprecation")
 public class MerchantMarkers implements ClientModInitializer
 {
 	public static final KeyMapping showMarkers = KeyBindingHelper.registerKeyBinding(new KeyMapping("merchantmarkers.key.showMarkers",
