@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import com.anthonyhilyard.merchantmarkers.Loader;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig;
 import com.anthonyhilyard.merchantmarkers.MerchantMarkersConfig.OverlayType;
+import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -44,16 +45,15 @@ import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
-@SuppressWarnings("deprecation")
 public class Markers
 {
 	public static record MarkerResource(ResourceLocation texture, OverlayType overlay, int level) {}
 
-	public static final ResourceLocation MARKER_ARROW = new ResourceLocation(Loader.MODID, "textures/entity/villager/arrow.png");
-	public static final ResourceLocation ICON_OVERLAY = new ResourceLocation(Loader.MODID, "textures/entity/villager/overlay.png");
-	public static final ResourceLocation NUMBER_OVERLAY = new ResourceLocation(Loader.MODID, "textures/entity/villager/numbers.png");
-	public static final ResourceLocation DEFAULT_ICON = new ResourceLocation(Loader.MODID, "textures/entity/villager/default.png");
-	public static final ResourceLocation EMPTY_MARKER = new ResourceLocation(Loader.MODID, "textures/entity/villager/empty.png");
+	public static final ResourceLocation MARKER_ARROW = ResourceLocation.fromNamespaceAndPath(Loader.MODID, "textures/entity/villager/arrow.png");
+	public static final ResourceLocation ICON_OVERLAY = ResourceLocation.fromNamespaceAndPath(Loader.MODID, "textures/entity/villager/overlay.png");
+	public static final ResourceLocation NUMBER_OVERLAY = ResourceLocation.fromNamespaceAndPath(Loader.MODID, "textures/entity/villager/numbers.png");
+	public static final ResourceLocation DEFAULT_ICON = ResourceLocation.fromNamespaceAndPath(Loader.MODID, "textures/entity/villager/default.png");
+	public static final ResourceLocation EMPTY_MARKER = ResourceLocation.fromNamespaceAndPath(Loader.MODID, "textures/entity/villager/empty.png");
 
 	private static Supplier<InputStream> emptyMarkerResource = null;
 
@@ -103,7 +103,7 @@ public class Markers
 			// Check if there is a marker with this profession name.
 			Minecraft mc = Minecraft.getInstance();
 			ResourceManager manager = mc.getResourceManager();
-			if (!manager.getResource(new ResourceLocation(Loader.MODID, "textures/entity/villager/markers/" + iconName + ".png")).isPresent())
+			if (!manager.getResource(ResourceLocation.fromNamespaceAndPath(Loader.MODID, "textures/entity/villager/markers/" + iconName + ".png")).isPresent())
 			{
 				// This isn't a valid profession name, so return a blank string.
 				iconName = "";
@@ -162,7 +162,7 @@ public class Markers
 			poseStack.pushPose();
 			poseStack.translate(0.0D, (double)entityHeight, 0.0D);
 			poseStack.mulPose(renderer.entityRenderDispatcher.cameraOrientation());
-			poseStack.scale(-0.025F, -0.025F, 0.025F);
+			poseStack.scale(0.025F, -0.025F, 0.025F);
 
 			final boolean depthTestEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
 			RenderSystem.enableBlend();
@@ -255,7 +255,7 @@ public class Markers
 					BakedModel bakedModel = itemRenderer.getModel(new ItemStack(associatedItem), (Level)null, mc.player, 0);
 
 					TextureAtlasSprite sprite = bakedModel.getParticleIcon();
-					ResourceLocation spriteLocation = new ResourceLocation(sprite.atlasLocation().getNamespace(), String.format("textures/%s%s", sprite.atlasLocation().getPath(), ".png"));
+					ResourceLocation spriteLocation = ResourceLocation.fromNamespaceAndPath(sprite.atlasLocation().getNamespace(), String.format("textures/%s%s", sprite.atlasLocation().getPath(), ".png"));
 					result = new MarkerResource(spriteLocation, overlayType, level);
 				}
 				break;
@@ -263,7 +263,7 @@ public class Markers
 			case JOBS:
 			{
 				// If the entity is a villager, find the (first) job block for their profession.
-				VillagerProfession profession = BuiltInRegistries.VILLAGER_PROFESSION.get(new ResourceLocation(professionName.replace("__", ":")));
+				VillagerProfession profession = BuiltInRegistries.VILLAGER_PROFESSION.get(ResourceLocation.tryParse(professionName.replace("__", ":")));
 				if (profession != VillagerProfession.NONE)
 				{
 					List<BlockState> jobBlockStates = BuiltInRegistries.POINT_OF_INTEREST_TYPE.registryKeySet().stream()
@@ -277,7 +277,7 @@ public class Markers
 						BakedModel bakedModel = blockRenderer.getBlockModel(jobBlockStates.iterator().next());
 
 						TextureAtlasSprite sprite = bakedModel.getParticleIcon();
-						ResourceLocation spriteLocation = new ResourceLocation(sprite.atlasLocation().getNamespace(), String.format("textures/%s%s", sprite.atlasLocation().getPath(), ".png"));
+						ResourceLocation spriteLocation = ResourceLocation.fromNamespaceAndPath(sprite.atlasLocation().getNamespace(), String.format("textures/%s%s", sprite.atlasLocation().getPath(), ".png"));
 						result = new MarkerResource(spriteLocation, overlayType, level);
 					}
 				}
@@ -287,7 +287,7 @@ public class Markers
 			default:
 			{
 				// Check if the given resource exists, otherwise use the default icon.
-				ResourceLocation iconResource = new ResourceLocation(Loader.MODID, String.format("textures/entity/villager/markers/%s.png", professionName));
+				ResourceLocation iconResource = ResourceLocation.fromNamespaceAndPath(Loader.MODID, String.format("textures/entity/villager/markers/%s.png", professionName));
 				if (mc.getResourceManager().getResource(iconResource).isPresent())
 				{
 					result = new MarkerResource(iconResource, overlayType, level);
@@ -317,7 +317,7 @@ public class Markers
 		poseStack.scale(scale, scale, 1.0f);
 		renderIcon(resource.texture(), poseStack, x, y, alpha);
 		renderOverlay(resource, (dx, dy, width, height, sx, sy) -> {
-			poseStack.translate(0, 0, -1);
+			poseStack.translate(0, 0, 1);
 			float imageSize = resource.overlay() == OverlayType.LEVEL ? 32.0f : 16.0f;
 			renderIcon(resource.overlay() == OverlayType.LEVEL ? NUMBER_OVERLAY : ICON_OVERLAY, poseStack, x + dx, y + dy, width, height, sx / imageSize, (sx + width) / imageSize, sy / imageSize, (sy + height) / imageSize, alpha);
 		});
@@ -378,17 +378,16 @@ public class Markers
 	{
 		Matrix4f matrix = poseStack.last().pose();
 
-		Minecraft.getInstance().getTextureManager().getTexture(icon).setFilter(false, false);
+		Lighting.setupForFlatItems();
 		RenderSystem.setShaderTexture(0, icon);
 
 		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
-		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-		bufferbuilder.vertex(matrix, (float)x,			(float)(y + h),		0).uv(u0, v1).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
-		bufferbuilder.vertex(matrix, (float)(x + w),	(float)(y + h),		0).uv(u1, v1).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
-		bufferbuilder.vertex(matrix, (float)(x + w),	(float)y,			0).uv(u1, v0).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
-		bufferbuilder.vertex(matrix, (float)x,			(float)y,			0).uv(u0, v0).color(1.0f, 1.0f, 1.0f, alpha).endVertex();
+		BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+		bufferbuilder.addVertex(matrix, (float)x,			(float)(y + h),		0).setUv(u0, v1).setColor(1.0f, 1.0f, 1.0f, alpha);
+		bufferbuilder.addVertex(matrix, (float)(x + w),		(float)(y + h),		0).setUv(u1, v1).setColor(1.0f, 1.0f, 1.0f, alpha);
+		bufferbuilder.addVertex(matrix, (float)(x + w),		(float)y,			0).setUv(u1, v0).setColor(1.0f, 1.0f, 1.0f, alpha);
+		bufferbuilder.addVertex(matrix, (float)x,			(float)y,			0).setUv(u0, v0).setColor(1.0f, 1.0f, 1.0f, alpha);
 
-		BufferUploader.drawWithShader(bufferbuilder.end());
+		BufferUploader.drawWithShader(bufferbuilder.build());
 	}
 }

@@ -4,9 +4,9 @@
 	"compatibilityLevel": "JAVA_17",
 	"plugin": "com.anthonyhilyard.merchantmarkers.mixin.MixinConfig",
 	"mixins": [
-		"EntityRendererMixin",
-		"FTBChunksClientMixin",
-		"FTBChunksMapIconWidgetMixin"
+		"EntityRendererMixin"
+		//"FTBChunksClientMixin",
+		//"FTBChunksMapIconWidgetMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

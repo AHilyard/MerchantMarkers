@@ -10,10 +10,9 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
-import fuzs.forgeconfigapiport.api.config.v2.ForgeConfigRegistry;
+import fuzs.forgeconfigapiport.fabric.api.forge.v4.ForgeConfigRegistry;
 import net.minecraftforge.fml.config.ModConfig;
 
-@SuppressWarnings("deprecation")
 public class MerchantMarkers implements ClientModInitializer
 {
 	public static final KeyMapping showMarkers = KeyBindingHelper.registerKeyBinding(new KeyMapping("merchantmarkers.key.showMarkers",

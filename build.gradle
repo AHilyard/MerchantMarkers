@@ -1,12 +1,12 @@
 plugins {
-	id 'fabric-loom' version '0.12-SNAPSHOT'
+	id 'fabric-loom' version '1.6-SNAPSHOT'
 	id 'maven-publish'
 }
 
 archivesBaseName = project.name + '-' + project.mcVersion + '-fabric'
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
 
 sourceSets.main.java.srcDirs += 'java'
 sourceSets.main.resources.srcDirs += 'resources'
@@ -54,9 +54,9 @@ dependencies {
 
 	modImplementation 'curse.maven:iceberg-539382:4706535'
 	modApi "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forgeConfigApiVersion}"
-	modApi 'curse.maven:xaerominimap-263420:4933803'
-	modApi 'dev.ftb.mods:ftb-chunks-fabric:2001.2.4'
-	modApi group: 'info.journeymap', name: 'journeymap-api', version: '1.20.2-1.9-fabric-SNAPSHOT', changing: true
+	modApi 'curse.maven:xaerominimap-263420:5437650'
+	//modApi 'dev.ftb.mods:ftb-chunks-fabric:2001.3.0'
+	modApi group: 'info.journeymap', name: 'journeymap-api', version: '1.20.5-1.9-fabric-SNAPSHOT', changing: true
 }
 
 loom {
@@ -73,7 +73,7 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
-	it.options.release = 17
+	it.options.release = 21
 }
 
 jar {

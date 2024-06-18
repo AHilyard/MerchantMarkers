@@ -17,7 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
-import fuzs.forgeconfigapiport.api.config.v2.ModConfigEvents;
+import fuzs.forgeconfigapiport.fabric.api.forge.v4.ForgeModConfigEvents;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.BooleanValue;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
@@ -25,7 +25,6 @@ import net.minecraftforge.common.ForgeConfigSpec.DoubleValue;
 import net.minecraftforge.common.ForgeConfigSpec.IntValue;
 import net.minecraftforge.fml.config.ModConfig;
 
-@SuppressWarnings("deprecation")
 public class MerchantMarkersConfig
 {
 	public static final ForgeConfigSpec SPEC;
@@ -132,7 +131,7 @@ public class MerchantMarkersConfig
 
 		build.pop().pop();
 
-		ModConfigEvents.reloading(Loader.MODID).register(MerchantMarkersConfig::onLoad);
+		ForgeModConfigEvents.reloading(Loader.MODID).register(MerchantMarkersConfig::onLoad);
 	}
 
 	/**
@@ -146,16 +145,17 @@ public class MerchantMarkersConfig
 	public ResourceLocation getAssociatedItem(String profession)
 	{
 		Map<String, Object> configuredItems = associatedItems.get().valueMap();
+		ResourceLocation resourceLocation = ResourceLocation.tryParse((String)configuredItems.get(profession));
 		if (configuredItems.containsKey(profession) && 
 			configuredItems.get(profession) instanceof String &&
-			ResourceLocation.isValidResourceLocation((String)configuredItems.get(profession)))
+			resourceLocation != null)
 		{
-			return new ResourceLocation((String)configuredItems.get(profession));
+			return resourceLocation;
 		}
 
 		if (defaultAssociatedItems.containsKey(profession))
 		{
-			return new ResourceLocation(defaultAssociatedItems.get(profession));
+			return ResourceLocation.tryParse(defaultAssociatedItems.get(profession));
 		}
 
 		return null;
@@ -174,7 +174,7 @@ public class MerchantMarkersConfig
 			Object value = v.valueMap().get(key);
 
 			// Value must be a string and a valid resource location.
-			if (!(value instanceof String) || !ResourceLocation.isValidResourceLocation((String)value))
+			if (!(value instanceof String) || ResourceLocation.tryParse((String)value) == null)
 			{
 				Loader.LOGGER.warn("Invalid associated item found: \"{}\".  This value was ignored.", value);
 			}

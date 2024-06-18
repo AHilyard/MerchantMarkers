@@ -30,10 +30,10 @@ public class MixinConfig implements IMixinConfigPlugin
 		}
 
 		// Only apply mixins with "ftbchunks" in the name if the mod "ftbchunks" is present.
-		if (mixinClassName.toLowerCase().contains("ftbchunks"))
-		{
-			return loadingModList.stream().anyMatch(modContainer -> modContainer.getMetadata().getId().contentEquals("ftbchunks"));
-		}
+		// if (mixinClassName.toLowerCase().contains("ftbchunks"))
+		// {
+		// 	return loadingModList.stream().anyMatch(modContainer -> modContainer.getMetadata().getId().contentEquals("ftbchunks"));
+		// }
 
 		return true;
 	}
