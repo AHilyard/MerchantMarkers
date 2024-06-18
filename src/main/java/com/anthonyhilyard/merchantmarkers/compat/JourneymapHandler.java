@@ -6,23 +6,26 @@ import com.anthonyhilyard.merchantmarkers.render.Markers;
 
 import org.apache.commons.lang3.StringUtils;
 
-import journeymap.client.api.IClientAPI;
-import journeymap.client.api.IClientPlugin;
-import journeymap.client.api.event.ClientEvent;
-import journeymap.client.api.event.fabric.EntityRadarUpdateEvent;
-import journeymap.client.api.event.fabric.FabricEvents;
+import journeymap.api.v2.client.IClientAPI;
+import journeymap.api.v2.client.IClientPlugin;
+import journeymap.api.v2.client.JourneyMapPlugin;
+import journeymap.api.v2.client.event.EntityRadarUpdateEvent;
+import journeymap.api.v2.common.event.ClientEventRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.network.chat.Component;
 
 import java.util.Collections;
 
+@JourneyMapPlugin(apiVersion = "2.0")
 public class JourneymapHandler implements IClientPlugin
 {
+	public JourneymapHandler() {}
+
 	@Override
 	public void initialize(IClientAPI jmClientApi)
 	{
-		FabricEvents.ENTITY_RADAR_UPDATE_EVENT.register(this::onEntityUpdate);
+		ClientEventRegistry.ENTITY_RADAR_UPDATE_EVENT.subscribe(getModId(), this::onEntityUpdate);
 	}
 
 	@Override
@@ -31,16 +34,12 @@ public class JourneymapHandler implements IClientPlugin
 		return Loader.MODID;
 	}
 
-	@Override
-	public void onEvent(ClientEvent clientEvent) { }
-
-
 	public void onEntityUpdate(EntityRadarUpdateEvent event)
 	{
 		// If we are showing custom icons on the minimap, replace the standard JourneyMap icons now.
 		if (MerchantMarkersConfig.INSTANCE.showOnMiniMap.get())
 		{
-			LivingEntity entity = event.getWrappedEntity().getEntityLivingRef().get();
+			Entity entity = event.getWrappedEntity().getEntityRef().get();
 
 			// If this entity is marker-able, update the texture before drawing.
 			if (Markers.shouldShowMarker(entity))
