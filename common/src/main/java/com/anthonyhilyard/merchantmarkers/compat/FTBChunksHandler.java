@@ -1,0 +1,313 @@
+package com.anthonyhilyard.merchantmarkers.compat;
+
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
+
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import com.anthonyhilyard.iceberg.services.Services;
+import com.anthonyhilyard.iceberg.util.DynamicResourcePack;
+import com.anthonyhilyard.merchantmarkers.MerchantMarkers;
+import com.anthonyhilyard.merchantmarkers.config.MerchantMarkersConfig;
+import com.anthonyhilyard.merchantmarkers.config.MerchantMarkersConfig.OverlayType;
+import com.anthonyhilyard.merchantmarkers.render.Markers;
+import com.anthonyhilyard.merchantmarkers.render.Markers.MarkerResource;
+
+import dev.ftb.mods.ftbchunks.client.mapicon.EntityMapIcon;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.FallbackResourceManager;
+import net.minecraft.server.packs.resources.MultiPackResourceManager;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.world.entity.Entity;
+
+public class FTBChunksHandler implements ResourceManagerReloadListener
+{
+	private static FTBChunksHandler INSTANCE = new FTBChunksHandler();
+	private static DynamicResourcePack dynamicPack = new DynamicResourcePack("ftbdynamicicons");
+	private static Entity currentEntity = null;
+	private static Map<MarkerResource, byte[]> iconCache = new HashMap<>();
+	private static BufferedImage iconOverlayImage = null;
+	private static BufferedImage numberOverlayImage = null;
+
+	public static final ResourceLocation villagerTexture = ResourceLocation.fromNamespaceAndPath("ftbchunks", "textures/faces/minecraft/villager.png");
+	private static Supplier<InputStream> defaultVillagerResource = null;
+
+	private static MethodHandle getEntity = null;
+
+	public static Entity getEntityFromIcon(EntityMapIcon icon)
+	{
+		try
+		{
+			if (getEntity == null)
+			{
+				Lookup lookup = MethodHandles.lookup();
+				Field entityField = EntityMapIcon.class.getDeclaredField("entity");
+				entityField.setAccessible(true);
+
+				getEntity = lookup.unreflectGetter(entityField);
+			}
+
+			return (Entity) getEntity.invoke(icon);
+		}
+		catch (Throwable e)
+		{
+			return null;
+		}
+	}
+
+	public static void setCurrentEntity(Entity entity)
+	{
+		currentEntity = entity;
+
+		if (Markers.shouldShowMarker(entity))
+		{
+			final Minecraft minecraft = Minecraft.getInstance();
+			final TextureManager textureManager = minecraft.getTextureManager();
+
+			// If this location is already registered in Minecraft's texture manager, release it first.
+			if (textureManager.getTexture(villagerTexture, null) != null)
+			{
+				minecraft.executeBlocking(() -> {
+					textureManager.release(villagerTexture);
+					textureManager.byPath.remove(villagerTexture); // Fix for MC-98707
+				});
+			}
+		}
+	}
+
+	public static void clearIconCache()
+	{
+		// Clear our local cache.
+		iconCache.clear();
+
+		// Reset our dynamic resources.
+		dynamicPack.clear();
+		setupDynamicIcons();
+	}
+
+
+	private static InputStream getResizedIcon(Supplier<MarkerResource> resourceSupplier)
+	{
+		MarkerResource resource = resourceSupplier.get();
+		if (resource == null)
+		{
+			return Markers.getEmptyInputStream();
+		}
+
+		if (iconCache.containsKey(resource))
+		{
+			return new ByteArrayInputStream(iconCache.get(resource));
+		}
+
+		final int innerSize = (int)(32 * MerchantMarkersConfig.getInstance().minimapIconScale.get());
+		final int outerSize = innerSize;
+
+		ResourceManager manager = Minecraft.getInstance().getResourceManager();
+
+		BufferedImage newImage = new BufferedImage(outerSize, outerSize, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D graphics = newImage.createGraphics();
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+		// Maybe it's just not loaded yet?  Bail for now.
+		if (manager.getResource(resource.texture()).isEmpty() && Minecraft.getInstance().getTextureManager().getTexture(resource.texture()) == null)
+		{
+			return Markers.getEmptyInputStream();
+		}
+
+		try
+		{
+			// Lazy-load the overlay images now if needed.
+			if (iconOverlayImage == null)
+			{
+				iconOverlayImage = ImageIO.read(manager.getResource(Markers.ICON_OVERLAY).get().open());
+			}
+			if (numberOverlayImage == null)
+			{
+				numberOverlayImage = ImageIO.read(manager.getResource(Markers.NUMBER_OVERLAY).get().open());
+			}
+
+			BufferedImage originalImage = ImageIO.read(manager.getResource(resource.texture()).get().open());
+			final int left = (outerSize - innerSize) / 2;
+			final int right = (outerSize + innerSize) / 2;
+			final int top = (outerSize + innerSize) / 2;
+			final int bottom = (outerSize - innerSize) / 2;
+
+			// Flip the image vertically.
+			AffineTransform at = new AffineTransform();
+			at.concatenate(AffineTransform.getScaleInstance(1, -1));
+			at.concatenate(AffineTransform.getTranslateInstance(0, -newImage.getHeight()));
+			graphics.transform(at);
+
+			// Draw the icon centered in the new image.
+			graphics.drawImage(originalImage, left, top, right, bottom,
+							   0, 0, originalImage.getWidth(), originalImage.getHeight(), null);
+
+			// Also draw the overlay graphic.
+			Markers.renderOverlay(resource, (dx, dy, width, height, sx, sy) -> {
+				BufferedImage overlayImage = resource.overlay() == OverlayType.LEVEL ? numberOverlayImage : iconOverlayImage;
+				final float scale = (innerSize / (float)originalImage.getWidth());
+				graphics.drawImage(overlayImage,
+								  (int)(left + dx * scale), (int)(top - dy * scale),
+								  (int)(left + (dx + width) * scale), (int)(top - (dy + height) * scale),
+								  sx, sy, sx + width, sy + height, null);
+			});
+			graphics.dispose();
+
+			// Convert the image to an input stream and return it.
+			try
+			{
+				ImageIO.write(newImage, "png", os);
+				iconCache.put(resource, os.toByteArray());
+				return new ByteArrayInputStream(iconCache.get(resource));
+			}
+			finally
+			{
+				os.close();
+			}
+		}
+		catch (Exception e)
+		{
+			MerchantMarkers.LOGGER.error(ExceptionUtils.getStackTrace(e));
+		}
+
+		iconCache.put(resource, new byte[0]);
+		return Markers.getEmptyInputStream();
+	}
+
+	@SuppressWarnings("resource")
+	public static void setupDynamicIcons()
+	{
+		MerchantMarkers.LOGGER.info("FTBChunksHandler.setupDynamicIcons");
+		final Minecraft minecraft = Minecraft.getInstance();
+		ResourceManager manager = minecraft.getResourceManager();
+
+		if (manager instanceof ReloadableResourceManager reloadableManager)
+		{
+			if (!reloadableManager.listeners.contains(INSTANCE))
+			{
+				Services.RELOAD_LISTENER_REGISTRAR.registerListener(INSTANCE, ResourceLocation.fromNamespaceAndPath(MerchantMarkers.MODID, "ftbchunkshandler"));
+			}
+
+			// If we haven't grabbed the default villager texture yet, do so now.
+			if (defaultVillagerResource == null)
+			{
+				try
+				{
+					for (Resource resource : reloadableManager.getResourceStack(villagerTexture))
+					{
+						// Return the first non-dynamic villager texture.
+						if (!resource.sourcePackId().contentEquals("ftbdynamicicons"))
+						{
+							final byte[] defaultVillagerBytes = IOUtils.toByteArray(resource.open());
+							defaultVillagerResource = () -> {
+								return new ByteArrayInputStream(defaultVillagerBytes); 
+							};
+							break;
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					// Don't do anything, maybe the resource pack just isn't ready yet.
+					MerchantMarkers.LOGGER.error(ExceptionUtils.getStackTrace(e));
+				}
+			}
+
+			dynamicPack.registerResource(PackType.CLIENT_RESOURCES, villagerTexture, () -> {
+
+				if (currentEntity == null || !Markers.shouldShowMarker(currentEntity))
+				{
+					return Markers.getEmptyInputStream();
+				}
+
+				try
+				{
+					String profession = Markers.getProfessionName(currentEntity);
+					int level = Markers.getProfessionLevel(currentEntity);
+
+					// Return the default texture for blacklisted professions.
+					if (MerchantMarkersConfig.getInstance().professionBlacklist.get().contains(profession))
+					{
+						return defaultVillagerResource == null ? Markers.getEmptyInputStream() : defaultVillagerResource.get();
+					}
+
+					InputStream proxyStream = getResizedIcon(() -> Markers.getMarkerResource(minecraft, profession, level));
+
+					// Stupid workaround, I know.  For some reason the proxy stream is sometimes not ready when it is returned,
+					// must be some sort of threaded timing issue?  In any case, this works.
+					Thread.sleep(1);
+
+					if (proxyStream.available() == 0)
+					{
+						return reloadableManager.getResource(Markers.getMarkerResource(minecraft, profession, level).texture()).get().open();
+					}
+					else
+					{
+						return proxyStream;
+					}
+				}
+				catch (Exception e)
+				{
+					MerchantMarkers.LOGGER.error(ExceptionUtils.getStackTrace(e));
+					return Markers.getEmptyInputStream();
+				}
+			});
+
+			// Add the resource pack if it hasn't been added already.
+			if (!reloadableManager.listPacks().anyMatch(pack -> pack.equals(dynamicPack)))
+			{
+				if (reloadableManager.resources instanceof MultiPackResourceManager resourceManager)
+				{
+					addResourcePack(resourceManager, dynamicPack);
+				}
+			}
+		}
+	}
+
+	private static void addResourcePack(MultiPackResourceManager resourceManager, PackResources pack)
+	{
+		resourceManager.packs.add(pack);
+
+		Set<String> namespaces = pack.getNamespaces(PackType.CLIENT_RESOURCES);
+		for (String namespace : namespaces)
+		{
+
+			FallbackResourceManager fallbackResourceManager = resourceManager.namespacedManagers.get(namespace);
+			if (fallbackResourceManager == null)
+			{
+				fallbackResourceManager = new FallbackResourceManager(PackType.CLIENT_RESOURCES, namespace);
+				resourceManager.namespacedManagers.put(namespace, fallbackResourceManager);
+			}
+			fallbackResourceManager.push(pack);
+		}
+	}
+
+	@Override
+	public void onResourceManagerReload(ResourceManager resourceManager)
+	{
+		Markers.clearResourceCache();
+		clearIconCache();
+	}
+}

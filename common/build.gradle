@@ -1,0 +1,22 @@
+architectury {
+	common rootProject.enabledPlatforms.split(',')
+}
+
+loom {
+	accessWidenerPath = file("src/main/resources/merchantmarkers.accesswidener")
+}
+
+repositories {
+}
+
+dependencies {
+	// We depend on Fabric Loader here to use the Fabric @Environment annotations,
+	// which get remapped to the correct annotations on each platform.
+	// Do NOT use other classes from Fabric Loader.
+	modImplementation "net.fabricmc:fabric-loader:$rootProject.fabricLoaderVersion"
+
+	modApi 'curse.maven:ftbchunks-314906:5448646'
+	modApi 'curse.maven:ftblibrary-404465:5482367'
+	modApi 'curse.maven:xaerominimap-263420:5437650'
+	modApi group: 'info.journeymap', name: 'journeymap-api-common', version: "$rootProject.journeymapVersion-SNAPSHOT", changing: true
+}

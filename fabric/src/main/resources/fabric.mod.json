@@ -1,0 +1,62 @@
+{
+	"schemaVersion": 1,
+	"id": "merchantmarkers",
+	"version": "${version}",
+
+	"name": "Merchant Markers",
+	"description": "Adds floating markers above villagers to indicate their professions.",
+	"authors": [ "Grend" ],
+	"contact": {
+		"homepage": "https://anthonyhilyard.com/",
+		"sources": "https://github.com/AHilyard/MerchantMarkers",
+		"discord": "https://discord.gg/S5NQjbXPnb"
+	},
+
+	"license": "CC BY-NC-ND 4.0",
+	"icon": "icon.png",
+
+	"environment": "client",
+
+	"entrypoints": {
+		"main": [
+			"com.anthonyhilyard.merchantmarkers.fabric.MerchantMarkersFabric"
+		],
+		"client": [
+			"com.anthonyhilyard.merchantmarkers.fabric.client.MerchantMarkersFabricClient"
+		],
+		"journeymap": [
+			"com.anthonyhilyard.merchantmarkers.compat.JourneymapHandler"
+		]
+	},
+
+	"accessWidener": "merchantmarkers.accesswidener",
+
+	"mixins": [
+		"merchantmarkers.mixins.json"
+	],
+
+	"depends": {
+		"fabricloader": ">=0.15.10",
+		"fabric": "*",
+		"minecraft": ">=1.21",
+		"java": ">=21",
+		"iceberg": ">=1.2.0"
+	},
+	"suggests": {
+		"xaerominimap": ">=24.2.1",
+		"journeymap": ">=6.0.0-beta.15",
+		"ftbchunks": ">=2100.1.0"
+	},
+	"custom": {
+		"modupdater": {
+			"strategy": "curseforge",
+			"projectID": 554836,
+			"strict": false
+		},
+		"modmenu": {
+			"links": {
+				"modmenu.discord": "https://discord.gg/S5NQjbXPnb"
+			}
+		}
+	}
+}
