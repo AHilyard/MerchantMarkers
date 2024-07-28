@@ -168,11 +168,11 @@ public class MerchantMarkersConfig extends IcebergConfig<MerchantMarkersConfig>
 		Markers.clearResourceCache();
 		try
 		{
-			if (Services.PLATFORM.isModLoaded("xaerominimap"))
+			if (Services.getPlatformHelper().isModLoaded("xaerominimap"))
 			{
 				Class.forName("com.anthonyhilyard.merchantmarkers.compat.XaeroMinimapHandler").getMethod("clearIconCache").invoke(null);
 			}
-			if (Services.PLATFORM.isModLoaded("ftbchunks"))
+			if (Services.getPlatformHelper().isModLoaded("ftbchunks"))
 			{
 				Class.forName("com.anthonyhilyard.merchantmarkers.compat.FTBChunksHandler").getMethod("clearIconCache").invoke(null);
 			}

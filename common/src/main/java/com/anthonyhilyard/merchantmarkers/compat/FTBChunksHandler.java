@@ -207,7 +207,7 @@ public class FTBChunksHandler implements ResourceManagerReloadListener
 		{
 			if (!reloadableManager.listeners.contains(INSTANCE))
 			{
-				Services.RELOAD_LISTENER_REGISTRAR.registerListener(INSTANCE, ResourceLocation.fromNamespaceAndPath(MerchantMarkers.MODID, "ftbchunkshandler"));
+				Services.getReloadListenerRegistrar().registerListener(INSTANCE, ResourceLocation.fromNamespaceAndPath(MerchantMarkers.MODID, "ftbchunkshandler"));
 			}
 
 			// If we haven't grabbed the default villager texture yet, do so now.

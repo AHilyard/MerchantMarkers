@@ -171,7 +171,7 @@ public class XaeroMinimapHandler implements ResourceManagerReloadListener
 
 			if (!reloadableManager.listeners.contains(INSTANCE))
 			{
-				Services.RELOAD_LISTENER_REGISTRAR.registerListener(INSTANCE, ResourceLocation.fromNamespaceAndPath(MerchantMarkers.MODID, "xaerominimaphandler"));
+				Services.getReloadListenerRegistrar().registerListener(INSTANCE, ResourceLocation.fromNamespaceAndPath(MerchantMarkers.MODID, "xaerominimaphandler"));
 			}
 
 			// If we're showing icons on the minimap, setup proxies for the villager icon definitions and icons themselves.

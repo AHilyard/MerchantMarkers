@@ -29,8 +29,8 @@ description='''Adds floating markers above villagers to indicate their professio
 [[dependencies.merchantmarkers]]
 	modId="iceberg"
 	mandatory=true
-	versionRange="[1.2.0,)"
-	ordering="NONE"
+	versionRange="[1.2.1,)"
+	ordering="AFTER"
 	side="BOTH"
 
 [[dependencies.merchantmarkers]]
@@ -50,6 +50,6 @@ description='''Adds floating markers above villagers to indicate their professio
 [[dependencies.merchantmarkers]]
 	modId="journeymap"
 	mandatory=false
-	versionRange="[6.0.0-beta.15,)"
+	versionRange="[1.21-6.0.0-beta.15,)"
 	ordering="BEFORE"
 	side="BOTH"

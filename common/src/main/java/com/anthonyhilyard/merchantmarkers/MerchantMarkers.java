@@ -16,7 +16,7 @@ public class MerchantMarkers
 	public static final Logger LOGGER = LogManager.getLogger(MODID);
 
 	public static boolean comparisonsActive = false;
-	public static final KeyMapping showMarkers = Services.KEY_MAPPING_REGISTRAR.registerMapping(new KeyMapping("merchantmarkers.key.showMarkers",
+	public static final KeyMapping showMarkers = Services.getKeyMappingRegistrar().registerMapping(new KeyMapping("merchantmarkers.key.showMarkers",
 										InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "merchantmarkers.key.categories.merchantMarkers"));
 
 	public static void init()

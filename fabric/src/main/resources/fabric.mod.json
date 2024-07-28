@@ -40,11 +40,11 @@
 		"fabric": "*",
 		"minecraft": ">=1.21",
 		"java": ">=21",
-		"iceberg": ">=1.2.0"
+		"iceberg": ">=1.2.1"
 	},
 	"suggests": {
 		"xaerominimap": ">=24.2.1",
-		"journeymap": ">=6.0.0-beta.15",
+		"journeymap": ">=1.21-6.0.0-beta.15",
 		"ftbchunks": ">=2100.1.0"
 	},
 	"custom": {
