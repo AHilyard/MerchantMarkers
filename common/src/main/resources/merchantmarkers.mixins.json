@@ -3,7 +3,7 @@
 	"package": "com.anthonyhilyard.merchantmarkers.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"plugin": "com.anthonyhilyard.merchantmarkers.mixin.MixinConfig",
-	"mixins": [
+	"client": [
 		"EntityRendererMixin",
 		"FTBChunksClientMixin",
 		"FTBChunksMapIconWidgetMixin",

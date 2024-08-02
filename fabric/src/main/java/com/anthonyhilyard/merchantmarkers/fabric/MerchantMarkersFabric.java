@@ -9,7 +9,6 @@ public final class MerchantMarkersFabric implements ModInitializer
 	@Override
 	public void onInitialize()
 	{
-		// Run our common setup.
 		MerchantMarkers.init();
 	}
 }

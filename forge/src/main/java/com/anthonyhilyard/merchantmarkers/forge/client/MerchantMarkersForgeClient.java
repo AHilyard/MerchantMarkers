@@ -12,18 +12,25 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 
-@EventBusSubscriber(modid = MerchantMarkers.MODID, bus = Bus.MOD)
+
+@EventBusSubscriber(modid = MerchantMarkers.MODID, bus = Bus.MOD, value = Dist.CLIENT)
 public class MerchantMarkersForgeClient
 {
+	@SubscribeEvent
+	public static void onConstructMod(final FMLConstructModEvent event)
+	{
+		MerchantMarkers.init();
+	}
+
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public static void onClientSetup(FMLClientSetupEvent event)
 	{
 		MerchantMarkersClient.init();
 
 		// If optifine is installed, we have to do some hacks to ensure it doesn't break markers.
-		if (FMLEnvironment.dist == Dist.CLIENT && OptifineHandler.optifineInstalled())
+		if (OptifineHandler.optifineInstalled())
 		{
 			MinecraftForge.EVENT_BUS.addListener((ServerStartedEvent serverStartedEvent) -> { OptifineHandler.init(); });
 		}

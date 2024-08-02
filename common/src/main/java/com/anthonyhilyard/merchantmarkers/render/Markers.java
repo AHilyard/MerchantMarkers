@@ -101,8 +101,8 @@ public class Markers
 			iconName = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).getPath();
 
 			// Check if there is a marker with this profession name.
-			Minecraft mc = Minecraft.getInstance();
-			ResourceManager manager = mc.getResourceManager();
+			Minecraft minecraft = Minecraft.getInstance();
+			ResourceManager manager = minecraft.getResourceManager();
 			if (!manager.getResource(ResourceLocation.fromNamespaceAndPath(MerchantMarkers.MODID, "textures/entity/villager/markers/" + iconName + ".png")).isPresent())
 			{
 				// This isn't a valid profession name, so return a blank string.
@@ -126,7 +126,7 @@ public class Markers
 	{
 		if (Markers.shouldShowMarker(entity))
 		{
-			Minecraft mc = Minecraft.getInstance();
+			Minecraft minecraft = Minecraft.getInstance();
 			String profession = getProfessionName(entity);
 			int level = getProfessionLevel(entity);
 
@@ -174,7 +174,7 @@ public class Markers
 			{
 				RenderSystem.disableDepthTest();
 
-				renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y, 0.3f * currentAlpha);
+				renderMarker(getMarkerResource(minecraft, profession, level), poseStack, -8, showArrow ? y - 9 : y, 0.3f * currentAlpha);
 
 				if (showArrow)
 				{
@@ -184,7 +184,7 @@ public class Markers
 
 			RenderSystem.enableDepthTest();
 
-			renderMarker(getMarkerResource(mc, profession, level), poseStack, -8, showArrow ? y - 9 : y, currentAlpha);
+			renderMarker(getMarkerResource(minecraft, profession, level), poseStack, -8, showArrow ? y - 9 : y, currentAlpha);
 
 			if (showArrow)
 			{
@@ -224,7 +224,7 @@ public class Markers
 		return true;
 	}
 
-	public static MarkerResource getMarkerResource(Minecraft mc, String professionName, int level)
+	public static MarkerResource getMarkerResource(Minecraft minecraft, String professionName, int level)
 	{
 		if (professionName == "")
 		{
@@ -251,8 +251,8 @@ public class Markers
 				{
 					Item associatedItem = BuiltInRegistries.ITEM.getOptional(associatedItemKey).get();
 
-					ItemRenderer itemRenderer = mc.getItemRenderer();
-					BakedModel bakedModel = itemRenderer.getModel(new ItemStack(associatedItem), (Level)null, mc.player, 0);
+					ItemRenderer itemRenderer = minecraft.getItemRenderer();
+					BakedModel bakedModel = itemRenderer.getModel(new ItemStack(associatedItem), (Level)null, minecraft.player, 0);
 
 					TextureAtlasSprite sprite = bakedModel.getParticleIcon();
 					ResourceLocation spriteLocation = ResourceLocation.fromNamespaceAndPath(sprite.atlasLocation().getNamespace(), String.format("textures/%s%s", sprite.atlasLocation().getPath(), ".png"));
@@ -273,7 +273,7 @@ public class Markers
 
 					if (!jobBlockStates.isEmpty())
 					{
-						BlockRenderDispatcher blockRenderer = mc.getBlockRenderer();
+						BlockRenderDispatcher blockRenderer = minecraft.getBlockRenderer();
 						BakedModel bakedModel = blockRenderer.getBlockModel(jobBlockStates.iterator().next());
 
 						TextureAtlasSprite sprite = bakedModel.getParticleIcon();
@@ -288,7 +288,7 @@ public class Markers
 			{
 				// Check if the given resource exists, otherwise use the default icon.
 				ResourceLocation iconResource = ResourceLocation.fromNamespaceAndPath(MerchantMarkers.MODID, String.format("textures/entity/villager/markers/%s.png", professionName));
-				if (mc.getResourceManager().getResource(iconResource).isPresent())
+				if (minecraft.getResourceManager().getResource(iconResource).isPresent())
 				{
 					result = new MarkerResource(iconResource, overlayType, level);
 				}
@@ -379,6 +379,9 @@ public class Markers
 		Matrix4f matrix = poseStack.last().pose();
 
 		Lighting.setupForFlatItems();
+		Minecraft minecraft = Minecraft.getInstance();
+		minecraft.getTextureManager().getTexture(icon).setFilter(false, false);
+
 		RenderSystem.setShaderTexture(0, icon);
 
 		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
