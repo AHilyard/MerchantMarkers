@@ -9,8 +9,8 @@ import net.minecraftforge.fml.common.Mod;
 @Mod(MerchantMarkers.MODID)
 public final class MerchantMarkersForge
 {
-	public MerchantMarkersForge()
+	public MerchantMarkersForge(ModLoadingContext context)
 	{
-		ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> "ANY", (remote, isServer) -> true));
+		context.registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> "ANY", (remote, isServer) -> true));
 	}
 }

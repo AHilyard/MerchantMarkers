@@ -83,7 +83,7 @@ public class OptifineHandler implements ResourceManagerReloadListener
 				// Output a message to the user so they know the setting was changed.
 				if (minecraft.player != null)
 				{
-					minecraft.player.sendSystemMessage(Component.literal(warningMessage).withStyle(ChatFormatting.GOLD));
+					minecraft.player.displayClientMessage(Component.literal(warningMessage).withStyle(ChatFormatting.GOLD), false);
 				}
 				else
 				{

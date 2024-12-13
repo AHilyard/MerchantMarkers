@@ -47,7 +47,7 @@ public class XaeroMinimapHandler implements ResourceManagerReloadListener
 	private static BufferedImage numberOverlayImage = null;
 	private static DynamicResourcePack dynamicPack = new DynamicResourcePack("xaerodynamicicons");
 
-	public static void buildVariantIdString(final StringBuilder stringBuilder, final EntityRenderer<?> entityRenderer, final Entity entity)
+	public static void buildVariantIdString(final StringBuilder stringBuilder, final EntityRenderer<?, ?> entityRenderer, final Entity entity)
 	{
 		// If the profession blacklist contains this profession, run the default functionality.
 		String profession = Markers.getProfessionName(entity);

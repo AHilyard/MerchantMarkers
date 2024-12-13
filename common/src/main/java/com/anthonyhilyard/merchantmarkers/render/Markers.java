@@ -23,7 +23,7 @@ import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
@@ -122,7 +122,7 @@ public class Markers
 		return level;
 	}
 
-	public static void renderMarker(EntityRenderer<?> renderer, Entity entity, Component component, PoseStack poseStack, MultiBufferSource buffer, int packedLight)
+	public static void renderMarker(EntityRenderer<?, ?> renderer, Entity entity, Component component, PoseStack poseStack, MultiBufferSource buffer, int packedLight)
 	{
 		if (Markers.shouldShowMarker(entity))
 		{
@@ -263,11 +263,11 @@ public class Markers
 			case JOBS:
 			{
 				// If the entity is a villager, find the (first) job block for their profession.
-				VillagerProfession profession = BuiltInRegistries.VILLAGER_PROFESSION.get(ResourceLocation.tryParse(professionName.replace("__", ":")));
+				VillagerProfession profession = BuiltInRegistries.VILLAGER_PROFESSION.getValue(ResourceLocation.tryParse(professionName.replace("__", ":")));
 				if (profession != VillagerProfession.NONE)
 				{
 					List<BlockState> jobBlockStates = BuiltInRegistries.POINT_OF_INTEREST_TYPE.registryKeySet().stream()
-						.map(key -> BuiltInRegistries.POINT_OF_INTEREST_TYPE.getHolder(key).get())
+						.map(key -> BuiltInRegistries.POINT_OF_INTEREST_TYPE.get(key).get())
 						.filter(poiType -> profession.acquirableJobSite().test(poiType))
 						.<BlockState>flatMap(poiType -> poiType.unwrap().right().get().matchingStates().stream()).distinct().toList();
 
@@ -384,7 +384,7 @@ public class Markers
 
 		RenderSystem.setShaderTexture(0, icon);
 
-		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+		RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
 		BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 		bufferbuilder.addVertex(matrix, (float)x,			(float)(y + h),		0).setUv(u0, v1).setColor(1.0f, 1.0f, 1.0f, alpha);
 		bufferbuilder.addVertex(matrix, (float)(x + w),		(float)(y + h),		0).setUv(u1, v1).setColor(1.0f, 1.0f, 1.0f, alpha);
